@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "ir.send.h"
+#include "ir.send.hpp"
 
 // Power
 IRSetting PowerOff = {"Power:Off", 0x20};
@@ -37,39 +35,11 @@ IRSetting FanHorzMiddleRight = {"FanHorz:MiddleRight", 0x10 };
 IRSetting FanHorzRight = {"FanHorz:Right", 0x14 };
 IRSetting FanHorzLeftRight = {"FanHorz:LeftRight", 0x20 };
 IRSetting FanHorzSwing = {"FanHorz:LeftRight", 0x30 };
-/*IRSetting FanHorzMiddleRight = {"FanHorz:MiddleRight", 0x14 };*/
-/*IRSetting FanHorzRight = {"FanHorz:Right", 0x20 };*/
-/*IRSetting FanHorzLeftRight = {"FanHorz:LeftRight", 0x30 };*/
 
 // Signal Header
 uint8_t HEADER_BYTE_1 = 0x23;
 uint8_t HEADER_BYTE_2 = 0xCB;
 uint8_t HEADER_BYTE_3 = 0x26;
-
-/*
- * Produce byte sequence.
- *
- * https://github.com/ToniA/Raw-IR-decoder-for-Arduino/blob/master/Fuego.cpp
- */
-uint8_t* irGetBytes(struct IRSettingCfg *settings) {
-    uint8_t *bytes = calloc(IR_NUM_BYTES, sizeof(uint8_t));
-
-    bytes[0] = HEADER_BYTE_1;
-    bytes[1] = HEADER_BYTE_2;
-    bytes[2] = HEADER_BYTE_3;
-    bytes[3] = 0x1; // ?
-
-    bytes[5] = settings->power.value;
-    bytes[6] = settings->mode.value;
-    bytes[7] = 31 - settings->temp.value;
-    bytes[8] = settings->fanSpeed.value | settings->fanDirVert.value;
-    /*bytes[8] = settings->fanDirVert.value << 3;*/
-
-    bytes[12] = settings->fanDirHorz.value;
-    bytes[13] = irGetChecksum(bytes);
-
-    return bytes;
-}
 
 /*
  * Produce sequence checksum.
@@ -84,12 +54,37 @@ uint8_t irGetChecksum(uint8_t* bytes) {
     return checksum;
 }
 
+
+/*
+ * Produce byte sequence.
+ *
+ * https://github.com/ToniA/Raw-IR-decoder-for-Arduino/blob/master/Fuego.cpp
+ */
+uint8_t* irGetBytes(struct IRSettingCfg *settings) {
+    uint8_t *bytes = (uint8_t*) calloc(IR_NUM_BYTES, sizeof(uint8_t));
+
+    bytes[0] = HEADER_BYTE_1;
+    bytes[1] = HEADER_BYTE_2;
+    bytes[2] = HEADER_BYTE_3;
+    bytes[3] = 0x1; // ?
+
+    bytes[5] = settings->power.value;
+    bytes[6] = settings->mode.value;
+    bytes[7] = 31 - settings->temp.value;
+    bytes[8] = settings->fanSpeed.value | settings->fanDirVert.value;
+
+    bytes[12] = settings->fanDirHorz.value;
+    bytes[13] = irGetChecksum(bytes);
+
+    return bytes;
+}
+
 /*
  * Produce bit sequence from byte sequence.
  */
 uint8_t* irGetBits(uint8_t* bytes) {
-    uint8_t *bits = calloc(IR_NUM_BYTES * IR_SIZOF_BYTE, sizeof(uint8_t));
-    /*uint8_t mask = 0x80;*/
+    uint8_t *bits = (uint8_t*) calloc(IR_NUM_BYTES * IR_SIZOF_BYTE, sizeof(uint8_t));
+    // uint8_t mask = 0x80
     uint8_t mask = 0x01; // Flip for some reason
     int i = 0;
 
@@ -103,18 +98,47 @@ uint8_t* irGetBits(uint8_t* bytes) {
     return bits;
 }
 
+// This procedure sends a 38KHz pulse to the IRledPin 
+// for a certain # of microseconds. We'll use this whenever we need to send codes
+void irPulse(uint8_t pin, long microsecs) {
+    // we'll count down from the number of microseconds we are told to wait
+
+    cli();  // this turns off any background interrupts
+
+    while (microsecs > 0) {
+        // 38 kHz is about 13 microseconds high and 13 microseconds low
+        digitalWrite(pin, HIGH);  // this takes about 3 microseconds to happen
+        delayMicroseconds(8);          // hang out for 10 microseconds, you can also change this to 9 if its not working
+        digitalWrite(pin, LOW);   // this also takes about 3 microseconds
+        delayMicroseconds(8);          // hang out for 10 microseconds, you can also change this to 9 if its not working
+
+        // so 26 microseconds altogether
+        microsecs -= 26;
+    }
+
+    sei();  // this turns them back on
+}
+
 /*
  * Blast IR settings.
  */
-void irSend(struct IRSettingCfg *settings) {
+void irSend(uint8_t pin, struct IRSettingCfg *settings) {
     // TODO: Blast that IR!
     uint8_t *bytes = irGetBytes(settings);
     uint8_t *bits = irGetBits(bytes);
 
-    printf("Bits: ");
-    for(int i = 0; i < IR_NUM_BYTES; i++) {
-        printf("%d", bits[i]);
+    // Initiate signal
+    irPulse(pin, 3500);
+    delayMicroseconds(1400);
+
+    // Body of signal
+    for (uint8_t i = 0; i < (IR_NUM_BYTES * IR_SIZOF_BYTE); i++) {
+        irPulse(pin, 500);
+        if (bits[i]) {
+            delayMicroseconds(1200);
+        } else {
+            delayMicroseconds(350);
+        }
     }
-    printf("\n");
-    
 }
+
