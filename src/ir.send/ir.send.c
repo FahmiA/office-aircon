@@ -3,8 +3,8 @@
 #include "ir.send.h"
 
 // Power
-IRSetting PowerOff = {"Power:Off", 0};
-IRSetting PowerOn = {"Power:On", 0x4};
+IRSetting PowerOff = {"Power:Off", 0x20};
+IRSetting PowerOn = {"Power:On", 0x24};
 
 // Mode
 IRSetting ModeAuto = {"Mode:Auto", 0};
@@ -19,7 +19,7 @@ IRSetting FanSpeedLow = {"FanSpeed:Low", 0x02 };
 IRSetting FanSpeedMed = {"FanSpeed:Med", 0x03 };
 IRSetting FanSpeedHigh = {"FanSpeed:High", 0x05 };
 
-// Fan Vertical Direction
+// Fan Vertical Direction (Vane)
 IRSetting FanVertAuto = {"FanVert:Auto", 0 };
 IRSetting FanVertUp = {"FanVert:Up", 0x08};
 IRSetting FanVertMiddleUp = {"FanVert:MiddleUp", 0x10};
@@ -27,6 +27,19 @@ IRSetting FanVertMiddle = {"FanVert:Middle", 0x18};
 IRSetting FanVertMiddleDown = {"FanVert:MiddleDown", 0x20};
 IRSetting FanVertDown = {"FanVert:Down", 0x28};
 IRSetting FanVertSwing = {"FanVert:Swing", 0x38};
+
+// Fan Horizontal Direction (Wide Vane)
+IRSetting FanHorzAuto = {"FanHorz:Auto", 0 };
+IRSetting FanHorzLeft = {"FanHorz:Left", 0x04 };
+IRSetting FanHorzMiddleLeft = {"FanHorz:MiddleLeft", 0x08 };
+IRSetting FanHorzMiddle = {"FanHorz:Middle", 0x0C };
+IRSetting FanHorzMiddleRight = {"FanHorz:MiddleRight", 0x10 };
+IRSetting FanHorzRight = {"FanHorz:Right", 0x14 };
+IRSetting FanHorzLeftRight = {"FanHorz:LeftRight", 0x20 };
+IRSetting FanHorzSwing = {"FanHorz:LeftRight", 0x30 };
+/*IRSetting FanHorzMiddleRight = {"FanHorz:MiddleRight", 0x14 };*/
+/*IRSetting FanHorzRight = {"FanHorz:Right", 0x20 };*/
+/*IRSetting FanHorzLeftRight = {"FanHorz:LeftRight", 0x30 };*/
 
 // Signal Header
 uint8_t HEADER_BYTE_1 = 0x23;
@@ -44,13 +57,15 @@ uint8_t* irGetBytes(struct IRSettingCfg *settings) {
     bytes[0] = HEADER_BYTE_1;
     bytes[1] = HEADER_BYTE_2;
     bytes[2] = HEADER_BYTE_3;
+    bytes[3] = 0x1; // ?
 
     bytes[5] = settings->power.value;
     bytes[6] = settings->mode.value;
     bytes[7] = 31 - settings->temp.value;
-    bytes[8] = settings->fanSpeed.value;
-    bytes[8] = settings->fanDirVert.value << 3;
+    bytes[8] = settings->fanSpeed.value | settings->fanDirVert.value;
+    /*bytes[8] = settings->fanDirVert.value << 3;*/
 
+    bytes[12] = settings->fanDirHorz.value;
     bytes[13] = irGetChecksum(bytes);
 
     return bytes;
@@ -74,12 +89,13 @@ uint8_t irGetChecksum(uint8_t* bytes) {
  */
 uint8_t* irGetBits(uint8_t* bytes) {
     uint8_t *bits = calloc(IR_NUM_BYTES * IR_SIZOF_BYTE, sizeof(uint8_t));
-    uint8_t mask = 0x80;
+    /*uint8_t mask = 0x80;*/
+    uint8_t mask = 0x01; // Flip for some reason
     int i = 0;
 
     for(int byteIndex = 0; byteIndex < IR_NUM_BYTES; byteIndex++) {
         for (int bitIndex = 0; bitIndex < IR_SIZOF_BYTE; bitIndex++) {
-            bits[i] = ((bytes[byteIndex] << bitIndex) & mask) ? 1 : 0;
+            bits[i] = ((bytes[byteIndex] >> bitIndex) & mask) ? 1 : 0;
             i += 1;
         }
     }

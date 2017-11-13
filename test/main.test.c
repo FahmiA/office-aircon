@@ -6,12 +6,13 @@
 
 void testIRSend() {
     struct IRSettingCfg settings;
-    settings.power = PowerOff;
-    settings.mode = ModeHeat;
-    settings.fanSpeed = FanSpeedAuto;
-    settings.fanDirVert = FanVertMiddle;
+    settings.power = PowerOn;
+    settings.mode = ModeCool;
+    settings.fanSpeed = FanSpeedHigh;
+    settings.fanDirVert = FanVertDown;
+    settings.fanDirHorz = FanHorzSwing;
 
-    IRSetting temp = {"Temp", 18};
+    IRSetting temp = {"Temp", 19};
     settings.temp = temp;
 
     printf("Settings\n");
@@ -34,6 +35,14 @@ void testIRSend() {
 
     uint8_t *bits = irGetBits(bytes);
     printf("\tBits:\n\t\t");
+    for(int i = 0; i < (IR_NUM_BYTES * IR_SIZOF_BYTE); i++) {
+        if (i % 8 == 0) {
+            printf("%d ", i / 8);
+        } else {
+            printf(" ");
+        }
+    }
+    printf("\n\t\t");
     for(int i = 0; i < (IR_NUM_BYTES * IR_SIZOF_BYTE); i++) {
         if ((i + 1) % 8 == 0) {
             printf("%d ", bits[i]);

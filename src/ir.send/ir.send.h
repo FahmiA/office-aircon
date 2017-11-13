@@ -33,12 +33,22 @@ IRSetting FanVertMiddleDown;
 IRSetting FanVertDown;
 IRSetting FanVertSwing;
 
+IRSetting FanHorzAuto;
+IRSetting FanHorzLeft;
+IRSetting FanHorzMiddleLeft;
+IRSetting FanHorzMiddle;
+IRSetting FanHorzMiddleRight;
+IRSetting FanHorzRight;
+IRSetting FanHorzLeftRight;
+IRSetting FanHorzSwing;
+
 struct IRSettingCfg {
     IRSetting power;
     IRSetting mode;
     IRSetting temp;
     IRSetting fanSpeed;
     IRSetting fanDirVert;
+    IRSetting fanDirHorz;
 };
 
 uint8_t* irGetBytes(struct IRSettingCfg *settings);
