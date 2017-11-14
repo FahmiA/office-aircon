@@ -1,18 +1,21 @@
 #include "Arduino.h"
 #include "ir.send/ir.send.hpp"
 
-#ifndef LED_BUILTIN
-    #define LED_BUILTIN 13
-#endif
+//#ifndef LED_BUILTIN
+    //#define LED_BUILTIN 13
+//#endif
 
-#define IRLED_PIN LED_BUILTIN
+//#define IRLED_PIN LED_BUILTIN
+
+// https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h#L37-L59
+#define IRLED_PIN 16
 
 struct IRSettingCfg settings;
 
 void setup() {
     Serial.begin(9600);
 
-    pinMode(LED_BUILTIN, OUTPUT);
+    pinMode(IRLED_PIN, OUTPUT);
 
     Serial.println("Start");
     printf("Start\n");
