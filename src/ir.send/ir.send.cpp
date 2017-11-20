@@ -132,13 +132,14 @@ void irSend(uint8_t pin, struct IRSettingCfg *settings) {
     delayMicroseconds(1400);
 
     // Body of signal
+    irPulse(pin, 500);
     for (uint8_t i = 0; i < (IR_NUM_BYTES * IR_SIZOF_BYTE); i++) {
-        irPulse(pin, 500);
         if (bits[i]) {
             delayMicroseconds(1200);
         } else {
             delayMicroseconds(350);
         }
+        irPulse(pin, 500);
     }
 }
 
