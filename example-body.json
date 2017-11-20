@@ -1,0 +1,8 @@
+{
+    "power": true,
+    "mode": "auto",
+    "temp": 19,
+    "fanspeed": "low",
+    "fanvert": "middleup",
+    "fanhorz": "middleright"
+}
