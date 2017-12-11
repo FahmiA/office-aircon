@@ -34,8 +34,13 @@ void pubsub_reconnect(PubSubSetting *setting) {
             // Once connected, publish an announcement...
             //pubsubClient.publish("outTopic", "hello world");
             // ... and resubscribe
-            pubsubClient.subscribe(setting->publicChannel);
-            pubsubClient.subscribe(setting->privateChannel);
+            pubsubClient.subscribe(setting->channelPrivateAll);
+            pubsubClient.subscribe(setting->channelPrivatePower);
+            pubsubClient.subscribe(setting->channelPrivateMode);
+            pubsubClient.subscribe(setting->channelPrivateTemp);
+            pubsubClient.subscribe(setting->channelPrivateFanSpeed);
+            pubsubClient.subscribe(setting->channelPrivateFanVert);
+            pubsubClient.subscribe(setting->channelPrivateFanHorz);
         } else {
             Serial.print("failed, rc=");
             Serial.print(pubsubClient.state());
