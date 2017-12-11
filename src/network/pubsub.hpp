@@ -6,10 +6,16 @@
 
 extern PubSubClient pubsubClient;
 
-void pubsub_setup(WiFiClient *wifiClient, const char* server, int port);
-void pubsub_loop();
-void pubsub_reconnect();
-void pubsub_callback(char* topic, byte* payload, unsigned int length);
+struct PubSubSetting {
+    const char* publicChannel;
+    const char* privateChannel;
+    const char* username;
+    const char* password;
+};
+
+void pubsub_setup(WiFiClient *wifiClient, const char* server, int port, MQTT_CALLBACK_SIGNATURE);
+void pubsub_loop(PubSubSetting *setting);
+void pubsub_reconnect(PubSubSetting *setting);
 
 
 #endif // PUBSUB
