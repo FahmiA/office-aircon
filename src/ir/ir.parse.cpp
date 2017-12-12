@@ -1,5 +1,18 @@
 #include "ir.parse.hpp"
 
+bool irParseBool(byte* payload) {
+    byte value = payload[0];
+    return value == 1 || value == '1' || value == 't' || value == 'T' || value == 'y' || value == 'Y';
+}
+
+uint8_t irParseInt(byte* payload) {
+    return (uint8_t)payload[0];
+}
+
+char* irParseString(byte* payload) {
+    return (char*) payload;
+}
+
 IRSetting* irParsePower(bool value) {
     if (value) {
         return &PowerOn;

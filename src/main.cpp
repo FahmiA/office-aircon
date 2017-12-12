@@ -4,19 +4,21 @@
 
 #include "network/wifi.hpp"
 #include "network/pubsub.hpp"
-#include "ir.send/ir.send.hpp"
-#include "ir.parse/ir.parse.hpp"
+#include "ir/ir.send.hpp"
+#include "ir/ir.parse.hpp"
 
 // https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h#L37-L59
 #define IRLED_PIN 16
 
-IRSettingCfg* parseIRSettingAll(byte* payload);
-IRSettingCfg* parseIRSettingPower(IRSettingCfg *settings, byte* payload);
-IRSettingCfg* parseIRSettingMode(IRSettingCfg *settings, byte* payload);
-IRSettingCfg* parseIRSettingFanSpeed(IRSettingCfg *settings, byte* payload);
-IRSettingCfg* parseIRSettingFanDirVert(IRSettingCfg *settings, byte* payload);
-IRSettingCfg* parseIRSettingFanDirHorz(IRSettingCfg *settings, byte* payload);
 void onIRRequest(char* topic, byte* payload, unsigned int length);
+
+IRSettingCfg* parseIRSettingAll(byte* payload);
+IRSettingCfg* parseIRSettingPower(IRSettingCfg *settings, bool value);
+IRSettingCfg* parseIRSettingMode(IRSettingCfg *settings, const char* value);
+IRSettingCfg* parseIRSettingTemp(IRSettingCfg *settings, uint8_t value);
+IRSettingCfg* parseIRSettingFanSpeed(IRSettingCfg *settings, const char* value);
+IRSettingCfg* parseIRSettingFanDirVert(IRSettingCfg *settings, const char* value);
+IRSettingCfg* parseIRSettingFanDirHorz(IRSettingCfg *settings, const char* value);
 
 PubSubSetting pubsubSetting = {
     MQTT_USERNAME
@@ -58,15 +60,17 @@ void onIRRequest(char* topic, byte* payload, unsigned int length) {
     if(strcmp(topic, pubsubSetting.channelPrivateAll) == 0) {
         settings = parseIRSettingAll(payload);
     } else if(strcmp(topic, pubsubSetting.channelPrivatePower) == 0) {
-        settings = parseIRSettingPower(&lastSettings, payload);
+        settings = parseIRSettingPower(&lastSettings, irParseBool(payload));
     } else if(strcmp(topic, pubsubSetting.channelPrivateMode) == 0) {
-        settings = parseIRSettingMode(&lastSettings, payload);
+        settings = parseIRSettingMode(&lastSettings, irParseString(payload));
+    } else if(strcmp(topic, pubsubSetting.channelPrivateTemp) == 0) {
+        settings = parseIRSettingTemp(&lastSettings, irParseInt(payload));
     } else if(strcmp(topic, pubsubSetting.channelPrivateFanSpeed) == 0) {
-        settings = parseIRSettingFanSpeed(&lastSettings, payload);
+        settings = parseIRSettingFanSpeed(&lastSettings, irParseString(payload));
     } else if(strcmp(topic, pubsubSetting.channelPrivateFanVert) == 0) {
-        settings = parseIRSettingFanDirVert(&lastSettings, payload);
+        settings = parseIRSettingFanDirVert(&lastSettings, irParseString(payload));
     } else if(strcmp(topic, pubsubSetting.channelPrivateFanHorz) == 0) {
-        settings = parseIRSettingFanDirHorz(&lastSettings, payload);
+        settings = parseIRSettingFanDirHorz(&lastSettings, irParseString(payload));
     }
 
     if(settings == NULL) {
@@ -74,17 +78,6 @@ void onIRRequest(char* topic, byte* payload, unsigned int length) {
     }
 
     lastSettings = *settings;
-
-    // should be large enough
-    StaticJsonBuffer<200> jsonBuffer;
-    JsonObject& root = jsonBuffer.createObject();
-    root["power"] = settings->power.value;
-    //root["mode"] = settings->mode.value;
-    //root["temp"] = settings->power.value;
-    //root["fanSpeed"] = settings->power.value;
-    //root["fanVert"] = settings->power.value;
-    //root["fanHorz"] = settings->power.value;
-    //pubsub_publish(
 
     Serial.println("Sending IR sequence...");
     irSend(IRLED_PIN, settings);
@@ -117,68 +110,20 @@ IRSettingCfg* parseIRSettingAll(byte* payload) {
     Serial.printf("\tfanHorz: %s\n", fanHorz);
 
     IRSettingCfg *settings = new IRSettingCfg();
-    IRSetting *setting;
 
-    Serial.println("Parsing power");
-    setting = irParsePower(power);
-    if (setting == NULL) {
-        Serial.println("Missing power");
-        delete settings;
-        return NULL;
-    }
-    settings->power = *setting;
-
-    Serial.println("Parsing mode");
-    setting = irParseMode(mode);
-    if (setting == NULL) {
-        Serial.println("Missing mode");
-        delete settings;
-        return NULL;
-    }
-    settings->mode = *setting;
-
-    Serial.println("Parsing temp");
-    setting = irParseTemp(temp);
-    if (setting == NULL) {
-        Serial.println("Missing temp");
-        delete settings;
-        return NULL;
-    }
-    settings->temp = *setting;
-
-    Serial.println("Parsing fan speed");
-    setting = irParseFanSpeed(fanSpeed);
-    if (setting == NULL) {
-        Serial.println("Missing fan speed");
-        delete settings;
-        return NULL;
-    }
-    settings->fanSpeed = *setting;
-
-    Serial.println("Parsing fan dir vert");
-    setting = irParseFanDirVert(fanVert);
-    if (setting == NULL) {
-        Serial.println("Missing fan dir vert");
-        delete settings;
-        return NULL;
-    }
-    settings->fanDirVert = *setting;
-
-    Serial.println("Parsing fan dir horz");
-    setting = irParseFanDirHorz(fanHorz);
-    if (setting == NULL) {
-        Serial.println("Missing fan dir horz");
-        delete settings;
-        return NULL;
-    }
-    settings->fanDirHorz = *setting;
+    settings = parseIRSettingPower(settings, power);
+    settings = settings != NULL ? parseIRSettingMode(settings, mode) : NULL;
+    settings = settings != NULL ? parseIRSettingTemp(settings, temp) : NULL;
+    settings = settings != NULL ? parseIRSettingFanSpeed(settings, fanSpeed) : NULL;
+    settings = settings != NULL ? parseIRSettingFanDirVert(settings, fanVert) : NULL;
+    settings = settings != NULL ? parseIRSettingFanDirHorz(settings, fanHorz) : NULL;
 
     return settings;
 }
 
-IRSettingCfg* parseIRSettingPower(IRSettingCfg *settings, byte* payload) {
+IRSettingCfg* parseIRSettingPower(IRSettingCfg *settings, bool value) {
     Serial.println("Parsing power");
-    IRSetting *setting = irParsePower(payload[0] == 1 || payload[0] == '1' || payload[0] == 't');
+    IRSetting *setting = irParsePower(value);
     if (setting == NULL) {
         Serial.println("Missing power");
         return NULL;
@@ -188,9 +133,9 @@ IRSettingCfg* parseIRSettingPower(IRSettingCfg *settings, byte* payload) {
     return settings;
 }
 
-IRSettingCfg* parseIRSettingMode(IRSettingCfg *settings, byte* payload) {
+IRSettingCfg* parseIRSettingMode(IRSettingCfg *settings, const char* value) {
     Serial.println("Parsing mode");
-    IRSetting *setting = irParseMode((char*)payload);
+    IRSetting *setting = irParseMode(value);
     if (setting == NULL) {
         Serial.println("Missing mode");
         return NULL;
@@ -200,9 +145,21 @@ IRSettingCfg* parseIRSettingMode(IRSettingCfg *settings, byte* payload) {
     return settings;
 }
 
-IRSettingCfg* parseIRSettingFanSpeed(IRSettingCfg *settings, byte* payload) {
+IRSettingCfg* parseIRSettingTemp(IRSettingCfg *settings, uint8_t value) {
+    Serial.println("Parsing temperature");
+    IRSetting *setting = irParseTemp(value);
+    if (setting == NULL) {
+        Serial.println("Missing temperature");
+        return NULL;
+    }
+
+    settings->mode = *setting;
+    return settings;
+}
+
+IRSettingCfg* parseIRSettingFanSpeed(IRSettingCfg *settings, const char* value) {
     Serial.println("Parsing fan speed");
-    IRSetting *setting = irParseFanSpeed((char*)payload);
+    IRSetting *setting = irParseFanSpeed(value);
     if (setting == NULL) {
         Serial.println("Missing fan speed");
         return NULL;
@@ -212,9 +169,9 @@ IRSettingCfg* parseIRSettingFanSpeed(IRSettingCfg *settings, byte* payload) {
     return settings;
 }
 
-IRSettingCfg* parseIRSettingFanDirVert(IRSettingCfg *settings, byte* payload) {
+IRSettingCfg* parseIRSettingFanDirVert(IRSettingCfg *settings, const char* value) {
     Serial.println("Parsing fan dir vert");
-    IRSetting *setting = irParseFanDirVert((char*)payload);
+    IRSetting *setting = irParseFanDirVert(value);
     if (setting == NULL) {
         Serial.println("Missing fan dir vert");
         return NULL;
@@ -224,9 +181,9 @@ IRSettingCfg* parseIRSettingFanDirVert(IRSettingCfg *settings, byte* payload) {
     return settings;
 }
 
-IRSettingCfg* parseIRSettingFanDirHorz(IRSettingCfg *settings, byte* payload) {
+IRSettingCfg* parseIRSettingFanDirHorz(IRSettingCfg *settings, const char* value) {
     Serial.println("Parsing fan dir horz");
-    IRSetting *setting = irParseFanDirHorz((char*)payload);
+    IRSetting *setting = irParseFanDirHorz(value);
     if (setting == NULL) {
         Serial.println("Missing fan dir horz");
         return NULL;

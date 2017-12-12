@@ -1,7 +1,11 @@
 #ifndef IR_PARSE
 #define IR_PARSE
 
-#include "../ir.send/ir.send.hpp"
+#include "ir.send.hpp"
+
+bool irParseBool(byte* payload);
+uint8_t irParseInt(byte* payload);
+char* irParseString(byte* payload);
 
 IRSetting* irParsePower(bool power);
 IRSetting* irParseMode(const char* value);
