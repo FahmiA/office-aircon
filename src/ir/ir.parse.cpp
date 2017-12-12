@@ -32,9 +32,11 @@ IRSetting* irParseMode(const char* value) {
     }
 }
 
-IRSetting* irParseTemp(int value) {
-    IRSetting settingTemp = {"Temp", value};
-    return &settingTemp;
+IRSetting* irParseTemp(uint8_t value) {
+    IRSetting *settingTemp = new IRSetting();
+    settingTemp->name = "Temp";
+    settingTemp->value = value;
+    return settingTemp;
 }
 
 IRSetting* irParseFanSpeed(const char* value) {
