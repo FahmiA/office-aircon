@@ -123,7 +123,7 @@ IRSettingCfg* parseIRSettingTemp(IRSettingCfg *settings, uint8_t value) {
         return NULL;
     }
 
-    settings->mode = *setting;
+    settings->temp = *setting;
     return settings;
 }
 
