@@ -6,10 +6,9 @@
 PubSubClient pubsubClient;
 
 void pubsub_setup(WiFiClient *wifiClient, const char* server, int port, MQTT_CALLBACK_SIGNATURE) {
-    pubsubClient = PubSubClient(*wifiClient);
+    Serial.printf("MQTT: %s:%d\n", server, port);
 
-    Serial.println(server);
-    Serial.println(port);
+    pubsubClient = PubSubClient(*wifiClient);
     pubsubClient.setServer(server, port);
     pubsubClient.setCallback(callback);
 }
@@ -21,6 +20,14 @@ void pubsub_loop(PubSubSetting *setting) {
     pubsubClient.loop();
 }
 
+bool isConnected() {
+    return pubsubClient.connected();
+}
+
+bool pubsub_publish(const char* topic, const char* payload, bool retained) {
+    return pubsubClient.publish(topic, payload, retained);
+}
+
 void pubsub_reconnect(PubSubSetting *setting) {
     // Loop until we're reconnected
     while (!pubsubClient.connected()) {
@@ -29,12 +36,10 @@ void pubsub_reconnect(PubSubSetting *setting) {
         String clientId = "ESP8266Client-";
         clientId += String(random(0xffff), HEX);
         // Attempt to connect
-        if (pubsubClient.connect(clientId.c_str(), setting->username, setting->password)) {
+        //if (pubsubClient.connect(clientId.c_str(), setting->username, setting->password)) {
+        if (pubsubClient.connect(clientId.c_str())) {
             Serial.println("connected");
-            // Once connected, publish an announcement...
-            //pubsubClient.publish("outTopic", "hello world");
-            // ... and resubscribe
-            pubsubClient.subscribe(setting->channelPrivateAll);
+            // resubscribe
             pubsubClient.subscribe(setting->channelPrivatePower);
             pubsubClient.subscribe(setting->channelPrivateMode);
             pubsubClient.subscribe(setting->channelPrivateTemp);

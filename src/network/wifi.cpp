@@ -13,8 +13,10 @@ void wifi_setup(const char* ssid, const char* password) {
         Serial.print(".");
     }
 
-    Serial.println("");
+    Serial.println();
     Serial.println("WiFi connected");
-    Serial.println("IP address: ");
+
+    Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+    Serial.println();
 }
