@@ -36,8 +36,7 @@ void pubsub_reconnect(PubSubSetting *setting) {
         String clientId = "ESP8266Client-";
         clientId += String(random(0xffff), HEX);
         // Attempt to connect
-        //if (pubsubClient.connect(clientId.c_str(), setting->username, setting->password)) {
-        if (pubsubClient.connect(clientId.c_str())) {
+        if (pubsubClient.connect(clientId.c_str(), setting->username, setting->password)) {
             Serial.println("connected");
             // resubscribe
             pubsubClient.subscribe(setting->channelPrivatePower);
