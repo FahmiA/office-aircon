@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <DHT.h>
 
 #include "network/wifi.hpp"
 #include "network/pubsub.hpp"
@@ -9,10 +10,15 @@
 // https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h#L37-L59
 #define IRLED_PIN 16
 
-#define EVENT_DELAY_MS 2000
+#define DHT_TYPE DHT11
+#define DHT_PIN 14
+
+#define IR_EVENT_DELAY_MS 2000
+#define TEMP_EVENT_DELAY_MS 300000 // 5 minutes
 
 void onIRRequest(char* topic, byte* payload, unsigned int length);
 void sendIRSequence();
+void takeTempReading();
 
 IRSettingCfg* parseIRSettingPower(IRSettingCfg *settings, bool value);
 IRSettingCfg* parseIRSettingMode(IRSettingCfg *settings, const char* value);
@@ -29,12 +35,18 @@ PubSubSetting pubsubSetting = {
     "aircon/" MQTT_CLIENT_ID "/temp",
     "aircon/" MQTT_CLIENT_ID "/fan-speed",
     "aircon/" MQTT_CLIENT_ID "/fan-vert",
-    "aircon/" MQTT_CLIENT_ID "/fan-horz"
+    "aircon/" MQTT_CLIENT_ID "/fan-horz",
+    "aircon/" MQTT_CLIENT_ID "/sense/temperature",
+    "aircon/" MQTT_CLIENT_ID "/sense/temperature-feel",
+    "aircon/" MQTT_CLIENT_ID "/sense/humidity"
 };
 
 WiFiClient espClient;
 IRSettingCfg lastSettings { PowerOff, ModeAuto, {"Temp", (uint8_t)21}, FanSpeedAuto, FanVertAuto, FanHorzAuto };
-unsigned long lastEventMs = 0;
+unsigned long lastIREventMS = 0;
+
+DHT dht(DHT_PIN, DHT_TYPE);
+unsigned long lastTempEventMS = 0;
 
 void setup() {
     Serial.begin(9600);
@@ -43,15 +55,25 @@ void setup() {
 
     wifi_setup(WIFI_SSID, WIFI_PASSWORD);
     pubsub_setup(&espClient, MQTT_SERVER, MQTT_PORT, onIRRequest);
+
+    dht.begin();
+
+    lastTempEventMS = millis();
 }
 
 void loop() {
     pubsub_loop(&pubsubSetting);
 
-    if(lastEventMs != 0 && millis() - lastEventMs > EVENT_DELAY_MS) {
-        lastEventMs = 0;
+    unsigned long ms = millis();
+    if(lastIREventMS != 0 && ms - lastIREventMS > IR_EVENT_DELAY_MS) {
+        lastIREventMS = 0;
         sendIRSequence();
     } 
+
+    if(ms - lastTempEventMS > TEMP_EVENT_DELAY_MS) {
+        lastTempEventMS = ms;
+        takeTempReading();
+    }
 }
 
 void onIRRequest(char* topic, byte* payload, unsigned int length) {
@@ -82,13 +104,44 @@ void onIRRequest(char* topic, byte* payload, unsigned int length) {
 
     lastSettings = *settings;
 
-    lastEventMs = millis();
+    lastIREventMS = millis();
 }
 
 void sendIRSequence() {
     Serial.print("Sending IR sequence... ");
     irSend(IRLED_PIN, &lastSettings);
     Serial.println("Done");
+}
+
+void takeTempReading() {
+    // Reading temperature or humidity takes about 250 milliseconds!
+    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+    float h = dht.readHumidity();
+    // Read temperature as Celsius (the default)
+    float t = dht.readTemperature();
+
+    // Check if any reads failed and exit early (to try again).
+    if (isnan(h) || isnan(t)) {
+        Serial.println("Failed to read from DHT sensor!");
+        return;
+    }
+
+    // Compute heat index in Celsius (isFahreheit = false)
+    float hic = dht.computeHeatIndex(t, h, false);
+
+    Serial.print("Humidity: ");
+    Serial.print(h);
+    Serial.print(" %\t");
+    Serial.print("Temperature: ");
+    Serial.print(t);
+    Serial.print(" *C ");
+    Serial.print("Heat index: ");
+    Serial.print(hic);
+    Serial.print(" *C\n");
+
+    pubsub_publish(pubsubSetting.channelSenseTemperature, t, true);
+    pubsub_publish(pubsubSetting.channelSenseTemperatureFeel, hic, true);
+    pubsub_publish(pubsubSetting.channelSenseHumidity, h, true);
 }
 
 IRSettingCfg* parseIRSettingPower(IRSettingCfg *settings, bool value) {

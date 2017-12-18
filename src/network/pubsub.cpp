@@ -28,6 +28,12 @@ bool pubsub_publish(const char* topic, const char* payload, bool retained) {
     return pubsubClient.publish(topic, payload, retained);
 }
 
+bool pubsub_publish(const char* topic, int payload, bool retained) {
+    char buffer[6];
+    itoa(payload, buffer, 10);
+    pubsub_publish(topic, buffer, retained);
+}
+
 void pubsub_reconnect(PubSubSetting *setting) {
     // Loop until we're reconnected
     while (!pubsubClient.connected()) {
