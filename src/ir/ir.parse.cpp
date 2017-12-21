@@ -72,14 +72,13 @@ IRSetting* irParseFanDirHorz(const char* value) {
         case 'l':
                   switch(value[1]) {
                       case 'r': return &FanHorzLeftRight;
-                      default: &FanHorzLeft;
+                      default: return &FanHorzLeft;
                   }
-                  break;
         case 'm':
                   switch(value[1]) {
                       case 'l': return &FanHorzMiddleLeft;
                       case 'r': return &FanHorzMiddleRight;
-                      default: &FanHorzMiddle; break;
+                      default: return &FanHorzMiddle;
                   }
                   break;
         case 'r': return &FanHorzRight;
