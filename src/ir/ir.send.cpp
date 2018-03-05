@@ -1,5 +1,11 @@
 #include "ir.send.hpp"
 
+#define HDR_MARK 3600
+#define HDR_SPACE 1630
+#define ONE_SPACE 1380
+#define ZERO_SPACE 420
+#define BIT_MARK 420
+
 // Power
 IRSetting PowerOff = {"Power:Off", 0x20};
 IRSetting PowerOn = {"Power:On", 0x24};
@@ -128,18 +134,18 @@ void irSend(uint8_t pin, struct IRSettingCfg *settings) {
     uint8_t *bits = irGetBits(bytes);
 
     // Initiate signal
-    irPulse(pin, 3500);
-    delayMicroseconds(1400);
+    irPulse(pin, HDR_MARK);
+    delayMicroseconds(HDR_SPACE);
 
     // Body of signal
-    irPulse(pin, 500);
+    irPulse(pin, ZERO_SPACE);
     for (uint8_t i = 0; i < (IR_NUM_BYTES * IR_SIZOF_BYTE); i++) {
         if (bits[i]) {
-            delayMicroseconds(1200);
+            delayMicroseconds(ONE_SPACE);
         } else {
-            delayMicroseconds(350);
+            delayMicroseconds(ZERO_SPACE);
         }
-        irPulse(pin, 500);
+        irPulse(pin, BIT_MARK);
     }
 }
 
