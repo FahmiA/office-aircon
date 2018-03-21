@@ -2,6 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <DHT.h>
 
+#include "config/config.hpp"
 #include "network/wifi.hpp"
 #include "network/pubsub.hpp"
 #include "ir/ir.send.hpp"
@@ -41,6 +42,16 @@ PubSubSetting pubsubSetting = {
     "aircon/" MQTT_CLIENT_ID "/sense/humidity"
 };
 
+Config conf = {
+    WIFI_SSID,
+    WIFI_PASSWORD,
+    MQTT_SERVER,
+    MQTT_PORT,
+    MQTT_USERNAME,
+    MQTT_PASSWORD, // Issue with password from private.sh
+    MQTT_CLIENT_ID
+};
+
 WiFiClient espClient;
 IRSettingCfg lastSettings { PowerOff, ModeAuto, {"Temp", (uint8_t)21}, FanSpeedAuto, FanVertAuto, FanHorzAuto };
 unsigned long lastIREventMS = 0;
@@ -53,27 +64,32 @@ void setup() {
     pinMode(IRLED_PIN, OUTPUT);
     randomSeed(micros());
 
-    wifi_setup(WIFI_SSID, WIFI_PASSWORD);
-    pubsub_setup(&espClient, MQTT_SERVER, MQTT_PORT, onIRRequest);
+    //wifi_setup(WIFI_SSID, WIFI_PASSWORD);
+    //pubsub_setup(&espClient, MQTT_SERVER, MQTT_PORT, onIRRequest);
 
-    dht.begin();
+    //dht.begin();
 
-    lastTempEventMS = millis();
+    //lastTempEventMS = millis();
+    //config_set(&conf);
+    //config_dump();
+
+    Config* newConfig = config_load();
+    config_print(newConfig);
 }
 
 void loop() {
-    pubsub_loop(&pubsubSetting);
+    //pubsub_loop(&pubsubSetting);
 
-    unsigned long ms = millis();
-    if(lastIREventMS != 0 && ms - lastIREventMS > IR_EVENT_DELAY_MS) {
-        lastIREventMS = 0;
-        sendIRSequence();
-    } 
+    //unsigned long ms = millis();
+    //if(lastIREventMS != 0 && ms - lastIREventMS > IR_EVENT_DELAY_MS) {
+    //    lastIREventMS = 0;
+    //    sendIRSequence();
+    //} 
 
-    if(ms - lastTempEventMS > TEMP_EVENT_DELAY_MS) {
-        lastTempEventMS = ms;
-        takeTempReading();
-    }
+    //if(ms - lastTempEventMS > TEMP_EVENT_DELAY_MS) {
+    //    lastTempEventMS = ms;
+    //    takeTempReading();
+    //}
 }
 
 void onIRRequest(char* topic, byte* payload, unsigned int length) {
