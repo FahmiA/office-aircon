@@ -7,17 +7,17 @@
 extern PubSubClient pubsubClient;
 
 struct PubSubSetting {
-    const char* username;
-    const char* password;
-    const char* channelPrivatePower;
-    const char* channelPrivateMode;
-    const char* channelPrivateTemp;
-    const char* channelPrivateFanSpeed;
-    const char* channelPrivateFanVert;
-    const char* channelPrivateFanHorz;
-    const char* channelSenseTemperature;
-    const char* channelSenseTemperatureFeel;
-    const char* channelSenseHumidity;
+    char* username;
+    char* password;
+    char* channelPower;
+    char* channelMode;
+    char* channelTemp;
+    char* channelFanSpeed;
+    char* channelFanVert;
+    char* channelFanHorz;
+    char* channelSenseTemperature;
+    char* channelSenseTemperatureFeel;
+    char* channelSenseHumidity;
 };
 
 void pubsub_setup(WiFiClient *wifiClient, const char* server, int port, MQTT_CALLBACK_SIGNATURE);

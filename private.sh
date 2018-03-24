@@ -1,4 +1,5 @@
-echo '-DWIFI_SSID=\"___\"' \
+echo '-DFIRST_TIME_SETUP=false' \
+     '-DWIFI_SSID=\"___\"' \
      '-DWIFI_PASSWORD=\"___\"' \
      '-DMQTT_SERVER=\"___\"' \
      '-DMQTT_PORT=1883' \

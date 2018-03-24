@@ -22,6 +22,21 @@ Config* config_load() {
     return config;
 }
 
+Config* config_loadFromEnvironment() {
+    Config* config = new Config();
+
+    config->version =               CONFIG_VERSION;
+    strcpy(config->wifiSSID,        WIFI_SSID);
+    strcpy(config->wifiPassword,    WIFI_PASSWORD);
+    strcpy(config->mqttServer,      MQTT_SERVER);
+    config->mqttPort =              MQTT_PORT;
+    strcpy(config->mqttUsername,    MQTT_USERNAME);
+    strcpy(config->mqttPassword,    MQTT_PASSWORD);
+    strcpy(config->mqttClientID,    MQTT_CLIENT_ID);
+
+    return config;
+}
+
 void config_set(Config* config) {
     EEPROM.begin(ESP8266_FLASH_SIZE);
 

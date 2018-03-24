@@ -45,12 +45,12 @@ void pubsub_reconnect(PubSubSetting *setting) {
         if (pubsubClient.connect(clientId.c_str(), setting->username, setting->password)) {
             Serial.println("connected");
             // resubscribe
-            pubsubClient.subscribe(setting->channelPrivatePower);
-            pubsubClient.subscribe(setting->channelPrivateMode);
-            pubsubClient.subscribe(setting->channelPrivateTemp);
-            pubsubClient.subscribe(setting->channelPrivateFanSpeed);
-            pubsubClient.subscribe(setting->channelPrivateFanVert);
-            pubsubClient.subscribe(setting->channelPrivateFanHorz);
+            pubsubClient.subscribe(setting->channelPower);
+            pubsubClient.subscribe(setting->channelMode);
+            pubsubClient.subscribe(setting->channelTemp);
+            pubsubClient.subscribe(setting->channelFanSpeed);
+            pubsubClient.subscribe(setting->channelFanVert);
+            pubsubClient.subscribe(setting->channelFanHorz);
         } else {
             Serial.print("failed, rc=");
             Serial.print(pubsubClient.state());

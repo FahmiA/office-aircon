@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <DHT.h>
+#include <string>
 
 #include "config/config.hpp"
 #include "network/wifi.hpp"
@@ -17,6 +18,8 @@
 #define IR_EVENT_DELAY_MS 2000
 #define TEMP_EVENT_DELAY_MS 300000 // 5 minutes
 
+PubSubSetting* makePubSubSetting(Config* config);
+
 void onIRRequest(char* topic, byte* payload, unsigned int length);
 void sendIRSequence();
 void takeTempReading();
@@ -28,29 +31,8 @@ IRSettingCfg* parseIRSettingFanSpeed(IRSettingCfg *settings, const char* value);
 IRSettingCfg* parseIRSettingFanDirVert(IRSettingCfg *settings, const char* value);
 IRSettingCfg* parseIRSettingFanDirHorz(IRSettingCfg *settings, const char* value);
 
-PubSubSetting pubsubSetting = {
-    MQTT_USERNAME,
-    MQTT_PASSWORD, // Issue with password from private.sh
-    "aircon/" MQTT_CLIENT_ID "/power",
-    "aircon/" MQTT_CLIENT_ID "/mode",
-    "aircon/" MQTT_CLIENT_ID "/temp",
-    "aircon/" MQTT_CLIENT_ID "/fan-speed",
-    "aircon/" MQTT_CLIENT_ID "/fan-vert",
-    "aircon/" MQTT_CLIENT_ID "/fan-horz",
-    "aircon/" MQTT_CLIENT_ID "/sense/temperature",
-    "aircon/" MQTT_CLIENT_ID "/sense/temperature-feel",
-    "aircon/" MQTT_CLIENT_ID "/sense/humidity"
-};
-
-Config conf = {
-    WIFI_SSID,
-    WIFI_PASSWORD,
-    MQTT_SERVER,
-    MQTT_PORT,
-    MQTT_USERNAME,
-    MQTT_PASSWORD, // Issue with password from private.sh
-    MQTT_CLIENT_ID
-};
+Config* config;
+PubSubSetting* pubsubSetting;
 
 WiFiClient espClient;
 IRSettingCfg lastSettings { PowerOff, ModeAuto, {"Temp", (uint8_t)21}, FanSpeedAuto, FanVertAuto, FanHorzAuto };
@@ -61,35 +43,66 @@ unsigned long lastTempEventMS = 0;
 
 void setup() {
     Serial.begin(9600);
+
+    if (FIRST_TIME_SETUP == true) {
+        Serial.println("Storing first-time configuration");
+        config = config_loadFromEnvironment();
+        config_set(config);
+        config_print(config);
+    } else {
+        config = config_load();
+    }
+
+    if (config == NULL) {
+        Serial.println("No config found");
+    }
+
+    pubsubSetting = makePubSubSetting(config);
+
     pinMode(IRLED_PIN, OUTPUT);
     randomSeed(micros());
 
-    //wifi_setup(WIFI_SSID, WIFI_PASSWORD);
-    //pubsub_setup(&espClient, MQTT_SERVER, MQTT_PORT, onIRRequest);
+    wifi_setup(config->wifiSSID, config->wifiPassword);
+    pubsub_setup(&espClient, config->mqttServer, config->mqttPort, onIRRequest);
 
-    //dht.begin();
+    dht.begin();
 
-    //lastTempEventMS = millis();
-    //config_set(&conf);
-    //config_dump();
-
-    Config* newConfig = config_load();
-    config_print(newConfig);
+    lastTempEventMS = millis();
 }
 
 void loop() {
-    //pubsub_loop(&pubsubSetting);
+    if (config == NULL) {
+        return;
+    }
+    pubsub_loop(pubsubSetting);
 
-    //unsigned long ms = millis();
-    //if(lastIREventMS != 0 && ms - lastIREventMS > IR_EVENT_DELAY_MS) {
-    //    lastIREventMS = 0;
-    //    sendIRSequence();
-    //} 
+    unsigned long ms = millis();
+    if(lastIREventMS != 0 && ms - lastIREventMS > IR_EVENT_DELAY_MS) {
+        lastIREventMS = 0;
+        sendIRSequence();
+    } 
 
-    //if(ms - lastTempEventMS > TEMP_EVENT_DELAY_MS) {
-    //    lastTempEventMS = ms;
-    //    takeTempReading();
-    //}
+    if(ms - lastTempEventMS > TEMP_EVENT_DELAY_MS) {
+        lastTempEventMS = ms;
+        takeTempReading();
+    }
+}
+
+PubSubSetting* makePubSubSetting(Config* config) {
+    PubSubSetting* setting = new PubSubSetting();
+    setting->username = config->mqttUsername;
+    setting->password = config->mqttPassword;
+    asprintf(&setting->channelPower, "aircon/%s/power", config->mqttClientID);
+    asprintf(&setting->channelMode, "aircon/%s/mode", config->mqttClientID);
+    asprintf(&setting->channelTemp, "aircon/%s/temp", config->mqttClientID);
+    asprintf(&setting->channelFanSpeed, "aircon/%s/fan-speed", config->mqttClientID);
+    asprintf(&setting->channelFanVert, "aircon/%s/fan-vert", config->mqttClientID);
+    asprintf(&setting->channelFanHorz, "aircon/%s/fan-horz", config->mqttClientID);
+    asprintf(&setting->channelSenseTemperature, "aircon/%s/temperature", config->mqttClientID);
+    asprintf(&setting->channelSenseTemperatureFeel, "aircon/%s/temperature-feel", config->mqttClientID);
+    asprintf(&setting->channelSenseHumidity, "aircon/%s/humidity", config->mqttClientID);
+
+    return setting;
 }
 
 void onIRRequest(char* topic, byte* payload, unsigned int length) {
@@ -100,17 +113,17 @@ void onIRRequest(char* topic, byte* payload, unsigned int length) {
     Serial.println();
 
     IRSettingCfg *settings = NULL;
-    if(strcmp(topic, pubsubSetting.channelPrivatePower) == 0) {
+    if(strcmp(topic, pubsubSetting->channelPower) == 0) {
         settings = parseIRSettingPower(&lastSettings, irParseBool(payload));
-    } else if(strcmp(topic, pubsubSetting.channelPrivateMode) == 0) {
+    } else if(strcmp(topic, pubsubSetting->channelMode) == 0) {
         settings = parseIRSettingMode(&lastSettings, irParseString(payload));
-    } else if(strcmp(topic, pubsubSetting.channelPrivateTemp) == 0) {
+    } else if(strcmp(topic, pubsubSetting->channelTemp) == 0) {
         settings = parseIRSettingTemp(&lastSettings, irParseInt(payload));
-    } else if(strcmp(topic, pubsubSetting.channelPrivateFanSpeed) == 0) {
+    } else if(strcmp(topic, pubsubSetting->channelFanSpeed) == 0) {
         settings = parseIRSettingFanSpeed(&lastSettings, irParseString(payload));
-    } else if(strcmp(topic, pubsubSetting.channelPrivateFanVert) == 0) {
+    } else if(strcmp(topic, pubsubSetting->channelFanVert) == 0) {
         settings = parseIRSettingFanDirVert(&lastSettings, irParseString(payload));
-    } else if(strcmp(topic, pubsubSetting.channelPrivateFanHorz) == 0) {
+    } else if(strcmp(topic, pubsubSetting->channelFanHorz) == 0) {
         settings = parseIRSettingFanDirHorz(&lastSettings, irParseString(payload));
     }
 
@@ -155,9 +168,9 @@ void takeTempReading() {
     Serial.print(hic);
     Serial.print(" *C\n");
 
-    pubsub_publish(pubsubSetting.channelSenseTemperature, t, true);
-    pubsub_publish(pubsubSetting.channelSenseTemperatureFeel, hic, true);
-    pubsub_publish(pubsubSetting.channelSenseHumidity, h, true);
+    pubsub_publish(pubsubSetting->channelSenseTemperature, t, true);
+    pubsub_publish(pubsubSetting->channelSenseTemperatureFeel, hic, true);
+    pubsub_publish(pubsubSetting->channelSenseHumidity, h, true);
 }
 
 IRSettingCfg* parseIRSettingPower(IRSettingCfg *settings, bool value) {

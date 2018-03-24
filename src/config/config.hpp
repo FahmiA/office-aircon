@@ -4,16 +4,18 @@
 #define CONFIG_VERSION 1
 
 struct Config {
-    const char wifiSSID[20];
-    const char wifiPassword[20];
-    const char mqttServer[20];
-    const int mqttPort;
-    const char mqttUsername[20];
-    const char mqttPassword[20];
-    const char mqttClientID[20];
+    int version;
+    char wifiSSID[20];
+    char wifiPassword[20];
+    char mqttServer[20];
+    int mqttPort;
+    char mqttUsername[20];
+    char mqttPassword[20];
+    char mqttClientID[20];
 };
 
 Config* config_load();
+Config* config_loadFromEnvironment();
 void config_set(Config* config);
 void config_dump();
 void config_print(Config *config);
