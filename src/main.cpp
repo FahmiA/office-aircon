@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <DHT.h>
-#include <string>
 
 #include "config/config.hpp"
 #include "network/wifi.hpp"
@@ -34,7 +33,7 @@ IRSettingCfg* parseIRSettingFanDirHorz(IRSettingCfg *settings, const char* value
 Config* config;
 PubSubSetting* pubsubSetting;
 
-WiFiClient espClient;
+WiFiClientSecure espClient;
 IRSettingCfg lastSettings { PowerOff, ModeAuto, {"Temp", (uint8_t)21}, FanSpeedAuto, FanVertAuto, FanHorzAuto };
 unsigned long lastIREventMS = 0;
 
