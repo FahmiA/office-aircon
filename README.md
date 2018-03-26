@@ -21,13 +21,8 @@ Watch
 
 ## Settings
 
-http://esp8266.github.io/Arduino/versions/2.1.0-rc1/doc/filesystem.html
+Update `private.sh` with settings and set `FIRST_TIME_SETUP` to true.
 
-Dump settings from flash eeprom partition
-    python -m esptool --port /dev/ttyUSB0 read_flash 0x7b000 0x80000 out.bin
+## Circuit
 
-Write settings to flash eeprom parition
-    python -m esptool --port /dev/ttyUSB0 write_flash 0x7b000 out.bind
-
-0x7b000 is the start of the parition
-0x80000 is the parition size (512 bytes)
+![Board Diagram](./board/Board_export.png)
