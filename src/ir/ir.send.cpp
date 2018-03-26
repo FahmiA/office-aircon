@@ -6,12 +6,14 @@
 #define ZERO_SPACE 420
 #define BIT_MARK 420
 
+// https://github.com/ToniA/arduino-heatpumpir/blob/master/FuegoHeatpumpIR.h
+
 // Power
 IRSetting PowerOff = {"Power:Off", 0x20};
 IRSetting PowerOn = {"Power:On", 0x24};
 
 // Mode
-IRSetting ModeAuto = {"Mode:Auto", 0};
+IRSetting ModeAuto = {"Mode:Auto", 0x8};
 IRSetting ModeHeat = {"Mode:Heat", 0x1};
 IRSetting ModeDry = {"Mode:Dry", 0x2};
 IRSetting ModeCool = {"Mode:Cool", 0x3};
