@@ -8,11 +8,24 @@
 #include "ir/ir.send.hpp"
 #include "ir/ir.parse.hpp"
 
+// LoLin NodeMCU pins (https://github.com/esp8266/Arduino/issues/584)
+#define D0  16
+#define D1  5
+#define D2  4
+#define D3  0
+#define D4  2
+#define D5  14
+#define D6  12
+#define D7  13
+#define D8  15
+#define D9  3
+#define D10 1
+
 // https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h#L37-L59
-#define IRLED_PIN 16
+#define IRLED_PIN D5
 
 #define DHT_TYPE DHT11
-#define DHT_PIN 14
+#define DHT_PIN D4
 
 #define IR_EVENT_DELAY_MS 2000
 #define TEMP_EVENT_DELAY_MS 300000 // 5 minutes
