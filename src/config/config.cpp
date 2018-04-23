@@ -71,3 +71,9 @@ void config_print(Config *config) {
     Serial.printf("MQTT Auth\t%s/%s\n", config->mqttUsername, config->mqttPassword);
     Serial.printf("MQTT Client \t%s\n", config->mqttClientID);
 }
+
+char* config_getName(Config *config) {
+    char* hostname;
+    asprintf(&hostname, "AirconClient-%s", config->mqttClientID);
+    return hostname;
+}
