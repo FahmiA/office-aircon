@@ -3,7 +3,13 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
+#include "../config/config.hpp"
+
+#define RECONNECT_DELAY_MS 5000 // 5 seconds
+
 PubSubClient pubsubClient;
+
+unsigned long lastReconnectMS = 0;
 
 void pubsub_setup(WiFiClient *wifiClient, const char* server, int port, MQTT_CALLBACK_SIGNATURE) {
     Serial.printf("MQTT: %s:%d\n", server, port);
@@ -13,14 +19,15 @@ void pubsub_setup(WiFiClient *wifiClient, const char* server, int port, MQTT_CAL
     pubsubClient.setCallback(callback);
 }
 
-void pubsub_loop(PubSubSetting *setting) {
-    if (!pubsubClient.connected()) {
-        pubsub_reconnect(setting);
+void pubsub_loop(Config *config, PubSubSetting *setting) {
+    if (!pubsubClient.connected() && millis() - lastReconnectMS > RECONNECT_DELAY_MS) {
+        pubsub_reconnect(config, setting);
+        lastReconnectMS = millis();
     }
     pubsubClient.loop();
 }
 
-bool isConnected() {
+bool pubsub_isConnected() {
     return pubsubClient.connected();
 }
 
@@ -34,30 +41,24 @@ bool pubsub_publish(const char* topic, int payload, bool retained) {
     pubsub_publish(topic, buffer, retained);
 }
 
-void pubsub_reconnect(PubSubSetting *setting) {
-    // Loop until we're reconnected
-    while (!pubsubClient.connected()) {
-        Serial.print("Attempting MQTT connection...");
-        // Create a random client ID
-        String clientId = "ESP8266Client-";
-        clientId += String(random(0xffff), HEX);
-        // Attempt to connect
-        if (pubsubClient.connect(clientId.c_str(), setting->username, setting->password)) {
-            Serial.println("connected");
-            // resubscribe
-            pubsubClient.subscribe(setting->channelPower);
-            pubsubClient.subscribe(setting->channelMode);
-            pubsubClient.subscribe(setting->channelTemp);
-            pubsubClient.subscribe(setting->channelFanSpeed);
-            pubsubClient.subscribe(setting->channelFanVert);
-            pubsubClient.subscribe(setting->channelFanHorz);
-        } else {
-            Serial.print("failed, rc=");
-            Serial.print(pubsubClient.state());
-            Serial.println(" try again in 5 seconds");
-            // Wait 5 seconds before retrying
-            delay(5000);
-        }
+void pubsub_reconnect(Config *config, PubSubSetting *setting) {
+    Serial.print("Attempting MQTT connection...");
+
+    char* clientId = config_getName(config);
+
+    if (pubsubClient.connect(clientId, setting->username, setting->password)) {
+        Serial.println("connected");
+
+        pubsubClient.subscribe(setting->channelPower);
+        pubsubClient.subscribe(setting->channelMode);
+        pubsubClient.subscribe(setting->channelTemp);
+        pubsubClient.subscribe(setting->channelFanSpeed);
+        pubsubClient.subscribe(setting->channelFanVert);
+        pubsubClient.subscribe(setting->channelFanHorz);
+    } else {
+        Serial.printf("failed, rc=%d Retry in 5 seconds\n", pubsubClient.state());
     }
+
+    free(clientId);
 }
 

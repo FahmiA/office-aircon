@@ -10,10 +10,11 @@ Development
 
 Deploy
 
+    # Wired
     platformio run --target upload
 
-Deploy Settings
-    pip install esptool
+    # Wireless
+    platformio run --target upload --upload-port AirconClient-1.local
 
 Watch
 
@@ -26,3 +27,8 @@ Update `private.sh` with settings and set `FIRST_TIME_SETUP` to true.
 ## Circuit
 
 ![Board Diagram](./board/Board_export.png)
+
+## Useful Resources
+
+ - OTA over MQTT: https://github.com/Imroy/pubsubclient/blob/master/examples/ESP8266-OTA/ESP8266-OTA.ino
+ - ESP8266-specific MQTT framework: https://github.com/marvinroger/homie-esp8266

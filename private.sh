@@ -5,4 +5,5 @@ echo '-DFIRST_TIME_SETUP=false' \
      '-DMQTT_PORT=1883' \
      '-DMQTT_USERNAME=\"___\"' \
      '-DMQTT_PASSWORD=\"___\"' \
-     '-DMQTT_CLIENT_ID=\"___\"'
+     '-DMQTT_CLIENT_ID=\"___\"' \
+     '-DOTA_PASSWORD=\"___\"'

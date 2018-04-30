@@ -4,6 +4,8 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
+#include "../config/config.hpp"
+
 extern PubSubClient pubsubClient;
 
 struct PubSubSetting {
@@ -21,11 +23,11 @@ struct PubSubSetting {
 };
 
 void pubsub_setup(WiFiClient *wifiClient, const char* server, int port, MQTT_CALLBACK_SIGNATURE);
-void pubsub_loop(PubSubSetting *setting);
-bool isConnected();
+void pubsub_loop(Config *config, PubSubSetting *setting);
+bool pubsub_isConnected();
 bool pubsub_publish(const char* topic, const char* payload, bool retained = false);
 bool pubsub_publish(const char* topic, int payload, bool retained = false);
-void pubsub_reconnect(PubSubSetting *setting);
+void pubsub_reconnect(Config *config, PubSubSetting *setting);
 
 
 #endif // PUBSUB

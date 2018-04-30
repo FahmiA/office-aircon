@@ -19,5 +19,6 @@ Config* config_loadFromEnvironment();
 void config_set(Config* config);
 void config_dump();
 void config_print(Config *config);
+char* config_getName(Config *config);
 
 #endif // CONFIG

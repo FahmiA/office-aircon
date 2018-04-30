@@ -7,6 +7,7 @@
 #include "network/pubsub.hpp"
 #include "ir/ir.send.hpp"
 #include "ir/ir.parse.hpp"
+#include "ota/ota.hpp"
 
 // LoLin NodeMCU pins (https://github.com/esp8266/Arduino/issues/584)
 #define D0  16
@@ -27,7 +28,7 @@
 #define DHT_TYPE DHT11
 #define DHT_PIN D4
 
-#define IR_EVENT_DELAY_MS 2000
+#define IR_EVENT_DELAY_MS 2000 // 2 seconds
 #define TEMP_EVENT_DELAY_MS 300000 // 5 minutes
 
 PubSubSetting* makePubSubSetting(Config* config);
@@ -75,6 +76,7 @@ void setup() {
     randomSeed(micros());
 
     wifi_setup(config->wifiSSID, config->wifiPassword);
+    ota_setup(config);
     pubsub_setup(&espClient, config->mqttServer, config->mqttPort, onIRRequest);
 
     dht.begin();
@@ -86,10 +88,12 @@ void loop() {
     if (config == NULL) {
         return;
     }
-    pubsub_loop(pubsubSetting);
+
+    ota_loop();
+    pubsub_loop(config, pubsubSetting);
 
     unsigned long ms = millis();
-    if(lastIREventMS != 0 && ms - lastIREventMS > IR_EVENT_DELAY_MS) {
+    if(lastIREventMS > 0 && ms - lastIREventMS > IR_EVENT_DELAY_MS) {
         lastIREventMS = 0;
         sendIRSequence();
     } 
@@ -193,6 +197,11 @@ IRSettingCfg* parseIRSettingPower(IRSettingCfg *settings, bool value) {
         return NULL;
     }
 
+    if(settings->power.value == setting->value) {
+        Serial.println("\tSame power");
+        return NULL;
+    }
+
     settings->power = *setting;
     return settings;
 }
@@ -202,6 +211,11 @@ IRSettingCfg* parseIRSettingMode(IRSettingCfg *settings, const char* value) {
     IRSetting *setting = irParseMode(value);
     if (setting == NULL) {
         Serial.println("\tMissing mode");
+        return NULL;
+    }
+
+    if(settings->mode.value == setting->value) {
+        Serial.println("\tSame mode");
         return NULL;
     }
 
@@ -217,6 +231,11 @@ IRSettingCfg* parseIRSettingTemp(IRSettingCfg *settings, uint8_t value) {
         return NULL;
     }
 
+    if(settings->temp.value == setting->value) {
+        Serial.println("\tSame temp");
+        return NULL;
+    }
+
     settings->temp = *setting;
     return settings;
 }
@@ -226,6 +245,11 @@ IRSettingCfg* parseIRSettingFanSpeed(IRSettingCfg *settings, const char* value) 
     IRSetting *setting = irParseFanSpeed(value);
     if (setting == NULL) {
         Serial.println("\tMissing fan speed");
+        return NULL;
+    }
+
+    if(settings->fanSpeed.value == setting->value) {
+        Serial.println("\tSame fan speed");
         return NULL;
     }
 
@@ -241,6 +265,11 @@ IRSettingCfg* parseIRSettingFanDirVert(IRSettingCfg *settings, const char* value
         return NULL;
     }
 
+    if(settings->fanDirVert.value == setting->value) {
+        Serial.println("\tSame fan dir vert");
+        return NULL;
+    }
+
     settings->fanDirVert = *setting;
     return settings;
 }
@@ -250,6 +279,11 @@ IRSettingCfg* parseIRSettingFanDirHorz(IRSettingCfg *settings, const char* value
     IRSetting *setting = irParseFanDirHorz(value);
     if (setting == NULL) {
         Serial.println("\tMissing fan dir horz");
+        return NULL;
+    }
+
+    if(settings->fanDirHorz.value == setting->value) {
+        Serial.println("\tSame fan dir horz");
         return NULL;
     }
 
