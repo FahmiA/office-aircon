@@ -6,7 +6,7 @@ bool irParseBool(byte* payload) {
 }
 
 uint8_t irParseInt(byte* payload) {
-    return (uint8_t)payload[0];
+    return atoi((char*)payload);
 }
 
 char* irParseString(byte* payload) {
