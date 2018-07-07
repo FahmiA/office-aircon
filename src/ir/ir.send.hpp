@@ -43,6 +43,7 @@ extern IRSetting FanHorzLeftRight;
 extern IRSetting FanHorzSwing;
 
 struct IRSettingCfg {
+    IRSetting model;
     IRSetting power;
     IRSetting mode;
     IRSetting temp;

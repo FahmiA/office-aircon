@@ -38,7 +38,7 @@ bool pubsub_publish(const char* topic, const char* payload, bool retained) {
 bool pubsub_publish(const char* topic, int payload, bool retained) {
     char buffer[6];
     itoa(payload, buffer, 10);
-    pubsub_publish(topic, buffer, retained);
+    return pubsub_publish(topic, buffer, retained);
 }
 
 void pubsub_reconnect(Config *config, PubSubSetting *setting) {
@@ -49,6 +49,7 @@ void pubsub_reconnect(Config *config, PubSubSetting *setting) {
     if (pubsubClient.connect(clientId, setting->username, setting->password)) {
         Serial.println("connected");
 
+        pubsubClient.subscribe(setting->channelModel);
         pubsubClient.subscribe(setting->channelPower);
         pubsubClient.subscribe(setting->channelMode);
         pubsubClient.subscribe(setting->channelTemp);

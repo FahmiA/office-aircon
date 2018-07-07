@@ -1,16 +1,25 @@
 #include "ir.parse.hpp"
 
+#include "ir.target.hpp"
+
 bool irParseBool(byte* payload) {
     byte value = payload[0];
     return value == 1 || value == '1' || value == 't' || value == 'T' || value == 'y' || value == 'Y';
 }
 
 uint8_t irParseInt(byte* payload) {
-    return atoi((char*)payload);
+    return atoi((char*) payload);
 }
 
 char* irParseString(byte* payload) {
     return (char*) payload;
+}
+
+IRSetting* irParseModel(const char* value) {
+    IRSetting *settingTemp = new IRSetting();
+    settingTemp->name = "Model";
+    settingTemp->value = irTargetGetId(value);
+    return settingTemp;
 }
 
 IRSetting* irParsePower(bool value) {

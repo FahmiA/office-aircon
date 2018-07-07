@@ -11,6 +11,7 @@ extern PubSubClient pubsubClient;
 struct PubSubSetting {
     char* username;
     char* password;
+    char* channelModel;
     char* channelPower;
     char* channelMode;
     char* channelTemp;
