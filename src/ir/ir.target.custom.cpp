@@ -1,4 +1,11 @@
-#include "ir.send.hpp"
+#include "ir.target.custom.hpp"
+
+#include "ir.target.hpp"
+
+// https://github.com/ToniA/arduino-heatpumpir/blob/master/FuegoHeatpumpIR.h
+
+#define IR_NUM_BYTES 14
+#define IR_SIZOF_BYTE 8
 
 #define HDR_MARK 3600
 #define HDR_SPACE 1630
@@ -6,49 +13,65 @@
 #define ZERO_SPACE 420
 #define BIT_MARK 420
 
-// https://github.com/ToniA/arduino-heatpumpir/blob/master/FuegoHeatpumpIR.h
-
-// Power
-IRSetting PowerOff = {"Power:Off", 0x20};
-IRSetting PowerOn = {"Power:On", 0x24};
-
-// Mode
-IRSetting ModeAuto = {"Mode:Auto", 0x8};
-IRSetting ModeHeat = {"Mode:Heat", 0x1};
-IRSetting ModeDry = {"Mode:Dry", 0x2};
-IRSetting ModeCool = {"Mode:Cool", 0x3};
-IRSetting ModeFan = {"Mode:Fan", 0x7};
-
-// Fan Speed
-IRSetting FanSpeedAuto = { "FanSpeed:Auto", 0 };
-IRSetting FanSpeedLow = {"FanSpeed:Low", 0x02 };
-IRSetting FanSpeedMed = {"FanSpeed:Med", 0x03 };
-IRSetting FanSpeedHigh = {"FanSpeed:High", 0x05 };
-
-// Fan Vertical Direction (Vane)
-IRSetting FanVertAuto = {"FanVert:Auto", 0 };
-IRSetting FanVertUp = {"FanVert:Up", 0x08};
-IRSetting FanVertMiddleUp = {"FanVert:MiddleUp", 0x10};
-IRSetting FanVertMiddle = {"FanVert:Middle", 0x18};
-IRSetting FanVertMiddleDown = {"FanVert:MiddleDown", 0x20};
-IRSetting FanVertDown = {"FanVert:Down", 0x28};
-IRSetting FanVertSwing = {"FanVert:Swing", 0x38};
-
-// Fan Horizontal Direction (Wide Vane)
-IRSetting FanHorzAuto = {"FanHorz:Auto", 0 };
-IRSetting FanHorzLeft = {"FanHorz:Left", 0x04 };
-IRSetting FanHorzMiddleLeft = {"FanHorz:MiddleLeft", 0x08 };
-IRSetting FanHorzMiddle = {"FanHorz:Middle", 0x0C };
-IRSetting FanHorzMiddleRight = {"FanHorz:MiddleRight", 0x10 };
-IRSetting FanHorzRight = {"FanHorz:Right", 0x14 };
-IRSetting FanHorzLeftRight = {"FanHorz:LeftRight", 0x20 };
-IRSetting FanHorzSwing = {"FanHorz:LeftRight", 0x30 };
-
 // Signal Header
-uint8_t HEADER_BYTE_1 = 0x23;
-uint8_t HEADER_BYTE_2 = 0xCB;
-uint8_t HEADER_BYTE_3 = 0x26;
+#define HEADER_BYTE_1 0x23
+#define HEADER_BYTE_2 0xCB
+#define HEADER_BYTE_3 0x26
 
+uint8_t irGetPowerCode(IRPower power) {
+    switch(power) {
+        case IRPower::On: return 0x24;
+        default: return 0x20;
+    }
+}
+
+uint8_t irGetModeCode(IRMode mode) {
+    switch(mode) {
+        case IRMode::Auto: return 0x8;
+        case IRMode::Heat: return 0x1;
+        case IRMode::Dry: return 0x2;
+        case IRMode::Cool: return 0x3;
+        case IRMode::Fan: return 0x7;
+        default: return 0x8;
+    }
+}
+
+uint8_t irGetFanSpeedCode(IRFanSpeed fanSpeed) {
+    switch(fanSpeed) {
+        case IRFanSpeed::Auto: return 0;
+        case IRFanSpeed::Low: return 0x02;
+        case IRFanSpeed::Medium: return 0x03;
+        case IRFanSpeed::High: return 0x05;
+        default: return 0;
+    }
+}
+
+uint8_t irGetFanVertCode(IRFanVert fanVert) {
+    switch(fanVert) {
+        case IRFanVert::Auto: return 0;
+        case IRFanVert::Up: return 0x08;
+        case IRFanVert::MiddleUp: return 0x10;
+        case IRFanVert::Middle: return 0x18;
+        case IRFanVert::MiddleDown: return 0x20;
+        case IRFanVert::Down: return 0x28;
+        case IRFanVert::Swing: return 0x38;
+        default: return 0;
+    }
+}
+
+uint8_t irGetFanHorzCode(IRFanHorz fanHorz) {
+    switch(fanHorz) {
+        case IRFanHorz::Auto: return 0;
+        case IRFanHorz::Left: return 0x04;
+        case IRFanHorz::MiddleLeft: return 0x08;
+        case IRFanHorz::Middle: return 0x0C;
+        case IRFanHorz::MiddleRight: return 0x10;
+        case IRFanHorz::Right: return 0x14;
+        case IRFanHorz::LeftRight: return 0x20;
+        case IRFanHorz::Swing: return 0x30;
+        default: return 0;
+    }
+}
 /*
  * Produce sequence checksum.
  */
@@ -61,7 +84,6 @@ uint8_t irGetChecksum(uint8_t* bytes) {
 
     return checksum;
 }
-
 
 /*
  * Produce byte sequence.
@@ -76,12 +98,12 @@ uint8_t* irGetBytes(struct IRSettingCfg *settings) {
     bytes[2] = HEADER_BYTE_3;
     bytes[3] = 0x1; // ?
 
-    bytes[5] = settings->power.value;
-    bytes[6] = settings->mode.value;
-    bytes[7] = 31 - settings->temp.value;
-    bytes[8] = settings->fanSpeed.value | settings->fanDirVert.value;
+    bytes[5] = irGetPowerCode(settings->power);
+    bytes[6] = irGetModeCode(settings->mode);
+    bytes[7] = 31 - settings->temp;
+    bytes[8] = irGetFanSpeedCode(settings->fanSpeed) | irGetFanVertCode(settings->fanDirVert);
 
-    bytes[12] = settings->fanDirHorz.value;
+    bytes[12] = irGetFanHorzCode(settings->fanDirHorz);
     bytes[13] = irGetChecksum(bytes);
 
     return bytes;
@@ -106,8 +128,10 @@ uint8_t* irGetBits(uint8_t* bytes) {
     return bits;
 }
 
-// This procedure sends a 38KHz pulse to the IRledPin 
-// for a certain # of microseconds. We'll use this whenever we need to send codes
+/*
+ * This procedure sends a 38KHz pulse to the IRledPin 
+ * for a certain # of microseconds. We'll use this whenever we need to send codes
+ */
 void irPulse(uint8_t pin, long microsecs) {
     // we'll count down from the number of microseconds we are told to wait
 
@@ -127,11 +151,13 @@ void irPulse(uint8_t pin, long microsecs) {
     sei();  // this turns them back on
 }
 
-/*
- * Blast IR settings.
- */
-void irSend(uint8_t pin, struct IRSettingCfg *settings) {
-    // TODO: Blast that IR!
+const char* IRCustomMitsubishiTarget::getName() {
+    return "mitsubishi-custom";
+}
+
+void IRCustomMitsubishiTarget::send(uint8_t pin, IRSettingCfg *settings) {
+    Serial.println("IRCustomMitsubishiTarget.send");
+
     uint8_t *bytes = irGetBytes(settings);
     uint8_t *bits = irGetBits(bytes);
 
@@ -150,4 +176,3 @@ void irSend(uint8_t pin, struct IRSettingCfg *settings) {
         irPulse(pin, BIT_MARK);
     }
 }
-

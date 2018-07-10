@@ -15,84 +15,79 @@ char* irParseString(byte* payload) {
     return (char*) payload;
 }
 
-IRSetting* irParseModel(const char* value) {
-    IRSetting *settingTemp = new IRSetting();
-    settingTemp->name = "Model";
-    settingTemp->value = irTargetGetId(value);
-    return settingTemp;
+uint8_t irParseModel(const char* value) {
+    //return irTargetGetId(value);
+    return 0;
 }
 
-IRSetting* irParsePower(bool value) {
+IRPower irParsePower(bool value) {
     if (value) {
-        return &PowerOn;
+        return IRPower::On;
     }
 
-    return &PowerOff;
+    return IRPower::Off;
 }
 
-IRSetting* irParseMode(const char* value) {
+IRMode irParseMode(const char* value) {
     switch(value[0]) {
-        case 'a': return &ModeAuto;
-        case 'h': return &ModeHeat;
-        case 'c': return &ModeCool;
-        case 'd': return &ModeDry;
-        case 'f': return &ModeFan;
-        default: return NULL;
-    }
-}
-
-IRSetting* irParseTemp(uint8_t value) {
-    IRSetting *settingTemp = new IRSetting();
-    settingTemp->name = "Temp";
-    settingTemp->value = value;
-    return settingTemp;
-}
-
-IRSetting* irParseFanSpeed(const char* value) {
-    switch(value[0]) {
-        case 'a': return &FanSpeedAuto;
-        case 'l': return &FanSpeedLow;
-        case 'm': return &FanSpeedMed;
-        case 'h': return &FanSpeedHigh;
-        default: return NULL;
+        case 'a': return IRMode::Auto;
+        case 'h': return IRMode::Heat;
+        case 'c': return IRMode::Cool;
+        case 'd': return IRMode::Dry;
+        case 'f': return IRMode::Fan;
+        default: return IRMode::Unknown;
     }
 }
 
-IRSetting* irParseFanDirVert(const char* value) {
+uint8_t irParseTemp(uint8_t value) {
+    return value;
+}
+
+IRFanSpeed irParseFanSpeed(const char* value) {
     switch(value[0]) {
-        case 'a': return &FanVertAuto;
-        case 'u': return &FanVertUp;
+        case 'a': return IRFanSpeed::Auto;
+        case 'l': return IRFanSpeed::Low;
+        case 'm': return IRFanSpeed::Medium;
+        case 'h': return IRFanSpeed::High;
+        default: return IRFanSpeed::Unknown;
+    }
+}
+
+IRFanVert irParseFanDirVert(const char* value) {
+    switch(value[0]) {
+        case 'a': return IRFanVert::Auto;
+        case 'u': return IRFanVert::Up;
         case 'm':
                   switch(value[1]) {
-                      case 'u':  return &FanVertMiddleUp;
-                      case 'd':  return &FanVertMiddleDown;
-                      default: return &FanVertMiddle;
+                      case 'u':  return IRFanVert::MiddleUp;
+                      case 'd':  return IRFanVert::MiddleDown;
+                      default: return IRFanVert::Middle;
                   }
                   break;
-        case 'd': return &FanVertDown;
-        case 's': return &FanVertSwing;
-        default: return NULL;
+        case 'd': return IRFanVert::Down;
+        case 's': return IRFanVert::Swing;
+        default: return IRFanVert::Unknown;
     }
 }
 
-IRSetting* irParseFanDirHorz(const char* value) {
+IRFanHorz irParseFanDirHorz(const char* value) {
     switch(value[0]) {
-        case 'a': return &FanVertAuto;
+        case 'a': return IRFanHorz::Auto;
         case 'l':
                   switch(value[1]) {
-                      case 'r': return &FanHorzLeftRight;
-                      default: return &FanHorzLeft;
+                      case 'r': return IRFanHorz::LeftRight;
+                      default: return IRFanHorz::Left;
                   }
         case 'm':
                   switch(value[1]) {
-                      case 'l': return &FanHorzMiddleLeft;
-                      case 'r': return &FanHorzMiddleRight;
-                      default: return &FanHorzMiddle;
+                      case 'l': return IRFanHorz::MiddleLeft;
+                      case 'r': return IRFanHorz::MiddleRight;
+                      default: return IRFanHorz::Middle;
                   }
                   break;
-        case 'r': return &FanHorzRight;
-        case 's': return &FanHorzSwing;
-        default: return NULL;
+        case 'r': return IRFanHorz::Right;
+        case 's': return IRFanHorz::Swing;
+        default: return IRFanHorz::Unknown;
     }
 }
 

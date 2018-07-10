@@ -6,7 +6,6 @@
 #include "network/wifi.hpp"
 #include "network/pubsub.hpp"
 #include "ir/ir.target.hpp"
-#include "ir/ir.send.hpp"
 #include "ir/ir.parse.hpp"
 #include "ota/ota.hpp"
 
@@ -50,7 +49,7 @@ Config* config;
 PubSubSetting* pubsubSetting;
 
 WiFiClient espClient; // Use 'WiFiClientSecure' for SSL connection
-IRSettingCfg lastSettings { {"Model", (uint8_t) 0}, PowerOff, ModeAuto, {"Temp", (uint8_t) 21}, FanSpeedAuto, FanVertAuto, FanHorzAuto };
+IRSettingCfg lastSettings { 0, IRPower::Off, IRMode::Auto, (uint8_t) 21, IRFanSpeed::Auto, IRFanVert::Auto, IRFanHorz::Auto };
 unsigned long lastIREventMS = 0;
 
 DHT dht(DHT_PIN, DHT_TYPE);
@@ -160,12 +159,12 @@ void onRequest(char* topic, byte* payload, unsigned int length) {
 void sendIRSequence() {
     Serial.print("Sending IR sequence... ");
 
-    IRTarget* irTarget = irTargetGetInstance(lastSettings.model.value);
-    irTarget->send(&lastSettings);
-    free(irTarget);
+    //IRTarget* irTarget = irTargetGetInstance(lastSettings.model);
+    //irTarget->send(IRLED_PIN, &lastSettings);
+    //free(irTarget);
 
     //irSend(IRLED_PIN, &lastSettings);
-    Serial.println("Done");
+    //Serial.println("Done");
 }
 
 void takeTempReading() {
@@ -200,121 +199,118 @@ void takeTempReading() {
 }
 
 IRSettingCfg* parseIRSettingModel(IRSettingCfg *settings, const char* value) {
-    Serial.println("Parsing model");
-    IRSetting *setting = irParseModel(value);
-    if (setting == NULL) {
-        Serial.println("\tMissing model");
-        return NULL;
-    }
+    //Serial.println("Parsing model");
+    //IRSetting *setting = irParseModel(value);
+    //if (setting == NULL) {
+    //    Serial.println("\tMissing model");
+    //    return NULL;
+    //}
 
-    if(settings->model.value == setting->value) {
-        Serial.println("\tSame model");
-        return NULL;
-    }
+    //if(settings->model.value == setting->value) {
+    //    Serial.println("\tSame model");
+    //    return NULL;
+    //}
 
-    settings->mode = *setting;
-    return settings;
+    //settings->mode = *setting;
+    //return settings;
+    return NULL;
 }
 
 IRSettingCfg* parseIRSettingPower(IRSettingCfg *settings, bool value) {
     Serial.println("Parsing power");
-    IRSetting *setting = irParsePower(value);
-    if (setting == NULL) {
-        Serial.println("\tMissing power");
-        return NULL;
-    }
+    IRPower power = irParsePower(value);
 
-    if(settings->power.value == setting->value) {
+    if(settings->power == power) {
         Serial.println("\tSame power");
         return NULL;
     }
 
-    settings->power = *setting;
+    settings->power = power;
     return settings;
 }
 
 IRSettingCfg* parseIRSettingMode(IRSettingCfg *settings, const char* value) {
     Serial.println("Parsing mode");
-    IRSetting *setting = irParseMode(value);
-    if (setting == NULL) {
+    IRMode mode = irParseMode(value);
+    if (mode == IRMode::Unknown) {
         Serial.println("\tMissing mode");
         return NULL;
     }
 
-    if(settings->mode.value == setting->value) {
+    if(settings->mode == mode) {
         Serial.println("\tSame mode");
         return NULL;
     }
 
-    settings->mode = *setting;
+    settings->mode = mode;
     return settings;
 }
 
 IRSettingCfg* parseIRSettingTemp(IRSettingCfg *settings, uint8_t value) {
     Serial.println("Parsing temperature");
-    IRSetting *setting = irParseTemp(value);
-    if (setting == NULL) {
+    uint8_t temp = irParseTemp(value);
+    if (temp < 0) { // TODO: Test min, max, and invalid temps
         Serial.println("\tMissing temperature");
         return NULL;
     }
 
-    if(settings->temp.value == setting->value) {
+    if(settings->temp == temp) {
         Serial.println("\tSame temp");
         return NULL;
     }
 
-    settings->temp = *setting;
+    settings->temp = temp;
     return settings;
 }
 
 IRSettingCfg* parseIRSettingFanSpeed(IRSettingCfg *settings, const char* value) {
     Serial.println("Parsing fan speed");
-    IRSetting *setting = irParseFanSpeed(value);
-    if (setting == NULL) {
+    IRFanSpeed fanSpeed = irParseFanSpeed(value);
+    if (fanSpeed == IRFanSpeed::Unknown) {
         Serial.println("\tMissing fan speed");
         return NULL;
     }
 
-    if(settings->fanSpeed.value == setting->value) {
+    if(settings->fanSpeed == fanSpeed) {
         Serial.println("\tSame fan speed");
         return NULL;
     }
 
-    settings->fanSpeed = *setting;
+    settings->fanSpeed = fanSpeed;
     return settings;
 }
 
 IRSettingCfg* parseIRSettingFanDirVert(IRSettingCfg *settings, const char* value) {
     Serial.println("Parsing fan dir vert");
-    IRSetting *setting = irParseFanDirVert(value);
-    if (setting == NULL) {
+    IRFanVert fanDirVert = irParseFanDirVert(value);
+    if (fanDirVert == IRFanVert::Unknown) {
         Serial.println("\tMissing fan dir vert");
         return NULL;
     }
 
-    if(settings->fanDirVert.value == setting->value) {
+    if(settings->fanDirVert == fanDirVert) {
         Serial.println("\tSame fan dir vert");
         return NULL;
     }
 
-    settings->fanDirVert = *setting;
+    settings->fanDirVert = fanDirVert;
     return settings;
 }
 
 IRSettingCfg* parseIRSettingFanDirHorz(IRSettingCfg *settings, const char* value) {
     Serial.println("Parsing fan dir horz");
-    IRSetting *setting = irParseFanDirHorz(value);
-    if (setting == NULL) {
+    IRFanHorz fanDirHorz = irParseFanDirHorz(value);
+    if (fanDirHorz == IRFanHorz::Unknown) {
         Serial.println("\tMissing fan dir horz");
         return NULL;
     }
 
-    if(settings->fanDirHorz.value == setting->value) {
+    if(settings->fanDirHorz == fanDirHorz) {
         Serial.println("\tSame fan dir horz");
         return NULL;
     }
 
-    settings->fanDirHorz = *setting;
+    settings->fanDirHorz = fanDirHorz;
     return settings;
 }
 

@@ -1,33 +1,28 @@
 #ifndef IR_TARGET
 #define IR_TARGET
 
-#include <HeatpumpIR.h>
+#include <Arduino.h>
 
-#include "ir.send.hpp"
+enum class IRPower    {Off, On};
+enum class IRMode     {Unknown, Auto, Heat, Cool, Dry, Fan};
+enum class IRFanSpeed {Unknown, Auto, Low, Medium, High};
+enum class IRFanVert  {Unknown, Auto, Up, MiddleUp, Middle, MiddleDown, Down, Swing};
+enum class IRFanHorz  {Unknown, Auto, Left, MiddleLeft, Middle, MiddleRight, Right, LeftRight, Swing};
+
+struct IRSettingCfg {
+    uint8_t model;
+    IRPower power;
+    IRMode mode;
+    uint8_t temp;
+    IRFanSpeed fanSpeed;
+    IRFanVert fanDirVert;
+    IRFanHorz fanDirHorz;
+};
 
 class IRTarget {
     public:
         virtual const char* getName() = 0;
-        virtual void send(IRSettingCfg *settings) = 0;
+        virtual void send(uint8_t pin, IRSettingCfg *settings) = 0;
 };
-
-class IRGenenricTarget : public IRTarget {
-    private:
-        HeatpumpIR *ir;
-    public:
-        IRGenenricTarget(HeatpumpIR*);
-        const char* getName();
-        void send(IRSettingCfg *settings);
-};
-
-class IRCustomMitsubishiTarget : public IRTarget {
-    public:
-        const char* getName();
-        void send(IRSettingCfg *settings);
-};
-
-uint8_t irTargetGetId(const char* key);
-IRTarget* irTargetGetInstance(int id);
-
 
 #endif // IR_TARGET
