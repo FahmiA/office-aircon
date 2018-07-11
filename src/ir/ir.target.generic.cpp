@@ -9,6 +9,63 @@
 #include <MitsubishiHeavyHeatpumpIR.h>
 #include <MitsubishiSEZKDXXHeatpumpIR.h>
 
+
+// TODO: Namespace this
+uint8_t irGenGetPowerCode(IRPower power) {
+    switch(power) {
+        case IRPower::On: return POWER_ON;
+        default: return POWER_OFF;
+    }
+}
+
+uint8_t irGenGetModeCode(IRMode mode) {
+    switch(mode) {
+        case IRMode::Auto: return MODE_AUTO;
+        case IRMode::Heat: return MODE_HEAT;
+        case IRMode::Dry: return MODE_DRY;
+        case IRMode::Cool: return MODE_COOL;
+        case IRMode::Fan: return MODE_FAN;
+        default: return MODE_AUTO;
+    }
+}
+
+uint8_t irGenGetFanSpeedCode(IRFanSpeed fanSpeed) {
+    switch(fanSpeed) {
+        case IRFanSpeed::Auto: return FAN_AUTO;
+        case IRFanSpeed::Low: return FAN_1;
+        case IRFanSpeed::Medium: return FAN_2;
+        case IRFanSpeed::High: return FAN_3;
+        default: return FAN_AUTO;
+    }
+}
+
+uint8_t irGenGetFanVertCode(IRFanVert fanVert) {
+    switch(fanVert) {
+        case IRFanVert::Auto: return VDIR_AUTO;
+        case IRFanVert::Up: return VDIR_UP;
+        case IRFanVert::MiddleUp: return VDIR_MUP;
+        case IRFanVert::Middle: return VDIR_MIDDLE;
+        case IRFanVert::MiddleDown: return VDIR_MDOWN;
+        case IRFanVert::Down: return VDIR_DOWN;
+        case IRFanVert::Swing: return VDIR_SWING;
+        default: return VDIR_AUTO;
+    }
+}
+
+uint8_t irGenGetFanHorzCode(IRFanHorz fanHorz) {
+    switch(fanHorz) {
+        case IRFanHorz::Auto: return HDIR_AUTO;
+        case IRFanHorz::Left: return HDIR_LEFT;
+        case IRFanHorz::MiddleLeft: return HDIR_MLEFT;
+        case IRFanHorz::Middle: return HDIR_MIDDLE;
+        case IRFanHorz::MiddleRight: return HDIR_MRIGHT;
+        case IRFanHorz::Right: return HDIR_RIGHT;
+        case IRFanHorz::LeftRight: return HDIR_AUTO; // Not supported by HeatpumpIR
+        case IRFanHorz::Swing: return HDIR_SWING;
+        default: return HDIR_AUTO;
+    }
+}
+
 HeatpumpIR *registeredHeatpumpIRs[] = {
     // Mitsubishi
     new MitsubishiFDHeatpumpIR(),
@@ -27,7 +84,7 @@ HeatpumpIR *registeredHeatpumpIRs[] = {
     new PanasonicLKEHeatpumpIR()
 };
 
-IRGenenricTarget::IRGenenricTarget(HeatpumpIR *ir) {
+void IRGenenricTarget::setIR(HeatpumpIR *ir) {
     this->ir = ir;
 }
 
@@ -36,31 +93,28 @@ const char* IRGenenricTarget::getName() {
 }
 
 void IRGenenricTarget::send(uint8_t pin, IRSettingCfg *settings) {
-    Serial.println("IRGenenricTarget.send");
+    IRSenderPWM irSender(pin);     // Arduino PWM
+    //IRSenderBlaster irSender(pin); // IR Blaster (generates the 38 kHz carrier)
+
+    this->ir->send(
+        irSender,
+        irGenGetPowerCode(settings->power),
+        irGenGetModeCode(settings->mode),
+        irGenGetFanSpeedCode(settings->fanSpeed),
+        settings->temp,
+        irGenGetFanVertCode(settings->fanDirVert),
+        irGenGetFanHorzCode(settings->fanDirHorz)
+    );
 }
 
-uint8_t irTargetGetId(const char* key) {
+IRGenenricTarget* irGetGenericTargets() {
     int count = sizeof(registeredHeatpumpIRs) / sizeof(*registeredHeatpumpIRs);
 
-    int id = 0;
+    IRGenenricTarget* targets = new IRGenenricTarget[count];
     for(int i = 0; i < count; i++) {
-        if(strcasecmp(key, registeredHeatpumpIRs[i]->model()) == 0) {
-            id = i + 1;
-            break;
-        }
+        targets[i].setIR(registeredHeatpumpIRs[i]);
     }
 
-    return id;
-}
-
-IRTarget* irTargetGetInstance(uint8_t id) {
-    int count = sizeof(registeredHeatpumpIRs) / sizeof(*registeredHeatpumpIRs);
-    if(id <= 0 || id >= count) {
-        //return new IRCustomMitsubishiTarget();
-        return NULL;
-    }
-
-    HeatpumpIR *heatpumpIR = registeredHeatpumpIRs[id - 1];
-    return new IRGenenricTarget(heatpumpIR);
-}
+    return targets;
+};
 

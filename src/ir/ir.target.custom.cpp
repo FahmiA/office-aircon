@@ -72,6 +72,7 @@ uint8_t irGetFanHorzCode(IRFanHorz fanHorz) {
         default: return 0;
     }
 }
+
 /*
  * Produce sequence checksum.
  */
