@@ -9,11 +9,12 @@ class IRGenenricTarget : public IRTarget {
     private:
         HeatpumpIR *ir;
     public:
-        void setIR(HeatpumpIR* ir);
+        IRGenenricTarget(HeatpumpIR* ir);
+        ~IRGenenricTarget();
         const char* getName();
         void send(uint8_t pin, IRSettingCfg *settings);
 };
 
-IRGenenricTarget* irGetGenericTargets();
+IRGenenricTarget* irGetGenericTarget(const char*);
 
 #endif // IR_TARGET_GENERIC

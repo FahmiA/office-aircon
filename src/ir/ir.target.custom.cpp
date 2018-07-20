@@ -18,6 +18,8 @@
 #define HEADER_BYTE_2 0xCB
 #define HEADER_BYTE_3 0x26
 
+#define MITSUBISHI_CUSTOM_NAME "mitsubishi_custom"
+
 uint8_t irGetPowerCode(IRPower power) {
     switch(power) {
         case IRPower::On: return 0x24;
@@ -153,7 +155,7 @@ void irPulse(uint8_t pin, long microsecs) {
 }
 
 const char* IRCustomMitsubishiTarget::getName() {
-    return "mitsubishi-custom";
+    return MITSUBISHI_CUSTOM_NAME;
 }
 
 void IRCustomMitsubishiTarget::send(uint8_t pin, IRSettingCfg *settings) {
@@ -177,3 +179,14 @@ void IRCustomMitsubishiTarget::send(uint8_t pin, IRSettingCfg *settings) {
         irPulse(pin, BIT_MARK);
     }
 }
+
+IRCustomMitsubishiTarget* irGetCustomTarget(const char* model) {
+    IRCustomMitsubishiTarget* target = NULL;
+
+    if(strcasecmp(model, MITSUBISHI_CUSTOM_NAME)) {
+        target = new IRCustomMitsubishiTarget();
+    }
+
+    return target;
+}
+

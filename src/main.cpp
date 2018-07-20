@@ -6,6 +6,7 @@
 #include "network/wifi.hpp"
 #include "network/pubsub.hpp"
 #include "ir/ir.target.hpp"
+#include "ir/ir.target.custom.hpp"
 #include "ir/ir.parse.hpp"
 #include "ota/ota.hpp"
 
@@ -49,7 +50,7 @@ Config* config;
 PubSubSetting* pubsubSetting;
 
 WiFiClient espClient; // Use 'WiFiClientSecure' for SSL connection
-IRSettingCfg lastSettings { 0, IRPower::Off, IRMode::Auto, (uint8_t) 21, IRFanSpeed::Auto, IRFanVert::Auto, IRFanHorz::Auto };
+IRSettingCfg lastSettings { new IRCustomMitsubishiTarget(), IRPower::Off, IRMode::Auto, (uint8_t) 21, IRFanSpeed::Auto, IRFanVert::Auto, IRFanHorz::Auto };
 unsigned long lastIREventMS = 0;
 
 DHT dht(DHT_PIN, DHT_TYPE);
@@ -158,13 +159,8 @@ void onRequest(char* topic, byte* payload, unsigned int length) {
 
 void sendIRSequence() {
     Serial.print("Sending IR sequence... ");
-
-    //IRTarget* irTarget = irTargetGetInstance(lastSettings.model);
-    //irTarget->send(IRLED_PIN, &lastSettings);
-    //free(irTarget);
-
-    //irSend(IRLED_PIN, &lastSettings);
-    //Serial.println("Done");
+    lastSettings.model->send(IRLED_PIN, &lastSettings);
+    Serial.println("Done");
 }
 
 void takeTempReading() {
@@ -199,21 +195,21 @@ void takeTempReading() {
 }
 
 IRSettingCfg* parseIRSettingModel(IRSettingCfg *settings, const char* value) {
-    //Serial.println("Parsing model");
-    //IRSetting *setting = irParseModel(value);
-    //if (setting == NULL) {
-    //    Serial.println("\tMissing model");
-    //    return NULL;
-    //}
+    Serial.println("Parsing model");
+    IRTarget *target = irParseModel(value);
+    if (target == NULL) {
+        Serial.println("\tMissing target");
+        return NULL;
+    }
 
-    //if(settings->model.value == setting->value) {
-    //    Serial.println("\tSame model");
-    //    return NULL;
-    //}
+    if(strcmp(settings->model->getName(), target->getName())) {
+        Serial.println("\tSame model");
+        return NULL;
+    }
 
-    //settings->mode = *setting;
-    //return settings;
-    return NULL;
+    delete settings->model;
+    settings->model = target;
+    return settings;
 }
 
 IRSettingCfg* parseIRSettingPower(IRSettingCfg *settings, bool value) {

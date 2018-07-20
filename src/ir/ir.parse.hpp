@@ -7,7 +7,7 @@ bool irParseBool(byte* payload);
 uint8_t irParseInt(byte* payload);
 char* irParseString(byte* payload);
 
-uint8_t irParseModel(const char* value);
+IRTarget* irParseModel(const char* value);
 IRPower irParsePower(bool power);
 IRMode irParseMode(const char* value);
 uint8_t irParseTemp(uint8_t value);

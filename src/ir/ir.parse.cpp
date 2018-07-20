@@ -1,6 +1,8 @@
 #include "ir.parse.hpp"
 
 #include "ir.target.hpp"
+#include "ir.target.custom.hpp"
+#include "ir.target.generic.hpp"
 
 bool irParseBool(byte* payload) {
     byte value = payload[0];
@@ -15,9 +17,14 @@ char* irParseString(byte* payload) {
     return (char*) payload;
 }
 
-uint8_t irParseModel(const char* value) {
-    //return irTargetGetId(value);
-    return 0;
+IRTarget* irParseModel(const char* value) {
+    IRTarget* target = irGetCustomTarget(value);
+
+    if(target == NULL) {
+        target = irGetGenericTarget(value);
+    }
+
+    return target;
 }
 
 IRPower irParsePower(bool value) {

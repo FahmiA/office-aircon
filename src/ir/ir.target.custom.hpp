@@ -9,4 +9,6 @@ class IRCustomMitsubishiTarget : public IRTarget {
         void send(uint8_t pin, IRSettingCfg *settings);
 };
 
+IRCustomMitsubishiTarget* irGetCustomTarget(const char*);
+
 #endif // IR_TARGET_CUSTOM
