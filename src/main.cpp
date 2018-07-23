@@ -126,26 +126,30 @@ PubSubSetting* makePubSubSetting(Config* config) {
 
 void onRequest(char* topic, byte* payload, unsigned int length) {
     Serial.printf("IR request received: %s\n\t", topic);
+
+    byte text[length + 1];
     for (unsigned int i = 0; i < length; i++) {
         Serial.print((char) payload[i]);
+        text[i] = payload[i];
     }
+    text[length] = 0;
     Serial.println();
 
     IRSettingCfg *settings = NULL;
-    if(strcmp(topic, pubsubSetting->channelPower) == 0) {
-        settings = parseIRSettingModel(&lastSettings, irParseString(payload));
+    if(strcmp(topic, pubsubSetting->channelModel) == 0) {
+        settings = parseIRSettingModel(&lastSettings, irParseString(text));
     } else if(strcmp(topic, pubsubSetting->channelPower) == 0) {
         settings = parseIRSettingPower(&lastSettings, irParseBool(payload));
     } else if(strcmp(topic, pubsubSetting->channelMode) == 0) {
-        settings = parseIRSettingMode(&lastSettings, irParseString(payload));
+        settings = parseIRSettingMode(&lastSettings, irParseString(text));
     } else if(strcmp(topic, pubsubSetting->channelTemp) == 0) {
         settings = parseIRSettingTemp(&lastSettings, irParseInt(payload));
     } else if(strcmp(topic, pubsubSetting->channelFanSpeed) == 0) {
-        settings = parseIRSettingFanSpeed(&lastSettings, irParseString(payload));
+        settings = parseIRSettingFanSpeed(&lastSettings, irParseString(text));
     } else if(strcmp(topic, pubsubSetting->channelFanVert) == 0) {
-        settings = parseIRSettingFanDirVert(&lastSettings, irParseString(payload));
+        settings = parseIRSettingFanDirVert(&lastSettings, irParseString(text));
     } else if(strcmp(topic, pubsubSetting->channelFanHorz) == 0) {
-        settings = parseIRSettingFanDirHorz(&lastSettings, irParseString(payload));
+        settings = parseIRSettingFanDirHorz(&lastSettings, irParseString(text));
     }
 
     if(settings == NULL) {

@@ -97,33 +97,33 @@ void IRGenenricTarget::send(uint8_t pin, IRSettingCfg *settings) {
 IRGenenricTarget* irGetGenericTarget(const char* model) {
     IRGenenricTarget* target = NULL;
 
-    if(strcasecmp(model, "mitsubishi_fd")) {
+    if(strcasecmp(model, "mitsubishi_fd") == 0) {
         target = new IRGenenricTarget(new MitsubishiFDHeatpumpIR());
-    } else if(strcasecmp(model, "mitsubishi_fd")) {
+    } else if(strcasecmp(model, "mitsubishi_fd") == 0) {
         target = new IRGenenricTarget(new MitsubishiFDHeatpumpIR());
-    } else if(strcasecmp(model, "mitsubishi_fe")) {
+    } else if(strcasecmp(model, "mitsubishi_fe") == 0) {
         target = new IRGenenricTarget(new MitsubishiFEHeatpumpIR());
-    } else if(strcasecmp(model, "mitsubishi_msy")) {
+    } else if(strcasecmp(model, "mitsubishi_msy") == 0) {
         target = new IRGenenricTarget(new MitsubishiMSYHeatpumpIR());
-    } else if(strcasecmp(model, "mitsubishi_fa")) {
+    } else if(strcasecmp(model, "mitsubishi_fa") == 0) {
         target = new IRGenenricTarget(new MitsubishiFAHeatpumpIR());
-    } else if(strcasecmp(model, "mitsubishi_heavy_zj")) {
+    } else if(strcasecmp(model, "mitsubishi_heavy_zj") == 0) {
         target = new IRGenenricTarget(new MitsubishiHeavyZJHeatpumpIR());
-    } else if(strcasecmp(model, "mitsubishi_heavy_zm")) {
+    } else if(strcasecmp(model, "mitsubishi_heavy_zm") == 0) {
         target = new IRGenenricTarget(new MitsubishiHeavyZMHeatpumpIR());
-    } else if(strcasecmp(model, "mitsubishi_heavy_zmp")) {
+    } else if(strcasecmp(model, "mitsubishi_heavy_zmp") == 0) {
         target = new IRGenenricTarget(new MitsubishiHeavyZMPHeatpumpIR());
-    } else if(strcasecmp(model, "mitsubishi_sez")) {
+    } else if(strcasecmp(model, "mitsubishi_sez") == 0) {
         target = new IRGenenricTarget(new MitsubishiSEZKDXXHeatpumpIR());
-    } else if(strcasecmp(model, "panasonic_ckp")) {
+    } else if(strcasecmp(model, "panasonic_ckp") == 0) {
         target = new IRGenenricTarget(new PanasonicCKPHeatpumpIR());
-    } else if(strcasecmp(model, "panasonic_dke")) {
+    } else if(strcasecmp(model, "panasonic_dke") == 0) {
         target = new IRGenenricTarget(new PanasonicDKEHeatpumpIR());
-    } else if(strcasecmp(model, "panasonic_jke")) {
+    } else if(strcasecmp(model, "panasonic_jke") == 0) {
         target = new IRGenenricTarget(new PanasonicJKEHeatpumpIR());
-    } else if(strcasecmp(model, "panasonic_nke")) {
+    } else if(strcasecmp(model, "panasonic_nke") == 0) {
         target = new IRGenenricTarget(new PanasonicNKEHeatpumpIR());
-    } else if(strcasecmp(model, "panasonic_lke")) {
+    } else if(strcasecmp(model, "panasonic_lke") == 0) {
         target = new IRGenenricTarget(new PanasonicLKEHeatpumpIR());
     }
 

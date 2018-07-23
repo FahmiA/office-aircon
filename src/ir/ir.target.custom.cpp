@@ -183,7 +183,7 @@ void IRCustomMitsubishiTarget::send(uint8_t pin, IRSettingCfg *settings) {
 IRCustomMitsubishiTarget* irGetCustomTarget(const char* model) {
     IRCustomMitsubishiTarget* target = NULL;
 
-    if(strcasecmp(model, MITSUBISHI_CUSTOM_NAME)) {
+    if(strcasecmp(model, MITSUBISHI_CUSTOM_NAME) == 0) {
         target = new IRCustomMitsubishiTarget();
     }
 
