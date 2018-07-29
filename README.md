@@ -20,6 +20,11 @@ Watch
 
     platformio device monitor
 
+## Validate
+
+    snap install cppcheck
+    cppcheck --platform=native src
+
 ## Settings
 
 Update `private.sh` with settings and set `FIRST_TIME_SETUP` to true.

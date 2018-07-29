@@ -149,5 +149,7 @@ void irSend(uint8_t pin, struct IRSettingCfg *settings) {
         }
         irPulse(pin, BIT_MARK);
     }
+
+    free(bits);
 }
 
