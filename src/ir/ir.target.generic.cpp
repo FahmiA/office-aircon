@@ -66,22 +66,27 @@ uint8_t irGenGetFanHorzCode(IRFanHorz fanHorz) {
     }
 }
 
-IRGenenricTarget::IRGenenricTarget(HeatpumpIR *ir) {
+IRGenenricTarget::IRGenenricTarget(HeatpumpIR *ir, const char *model) {
     this->ir = ir;
+    this->model = model;
 }
 
 IRGenenricTarget::~IRGenenricTarget() {
     delete this->ir;
+    delete this->model;
 }
 
 const char* IRGenenricTarget::getName() {
-    return this->ir->model();
+    // TODO: Fetch this->ir->model() from PROGMEM
+    return this->model;
 }
 
 void IRGenenricTarget::send(uint8_t pin, IRSettingCfg *settings) {
+    Serial.println("IRGenenricTarget.send");
+
     //IRSenderPWM irSender(pin);     // Arduino PWM
-    IRSenderBlaster irSender(pin); // IR Blaster (generates the 38 kHz carrier)
-    //IRSenderBitBang irSender(pin); // IR Blaster (generates the 38 kHz carrier)
+    //IRSenderBlaster irSender(pin); // IR Blaster (generates the 38 kHz carrier)
+    IRSenderBitBang irSender(pin); // 'bit banging' on ESP8266 etc (also 38 kHz)
 
     this->ir->send(
         irSender,
@@ -98,33 +103,33 @@ IRGenenricTarget* irGetGenericTarget(const char* model) {
     IRGenenricTarget* target = NULL;
 
     if(strcasecmp(model, "mitsubishi_fd") == 0) {
-        target = new IRGenenricTarget(new MitsubishiFDHeatpumpIR());
+        target = new IRGenenricTarget(new MitsubishiFDHeatpumpIR(), "mitsubishi_fd");
     } else if(strcasecmp(model, "mitsubishi_fd") == 0) {
-        target = new IRGenenricTarget(new MitsubishiFDHeatpumpIR());
+        target = new IRGenenricTarget(new MitsubishiFDHeatpumpIR(), "mitsubishi_fd");
     } else if(strcasecmp(model, "mitsubishi_fe") == 0) {
-        target = new IRGenenricTarget(new MitsubishiFEHeatpumpIR());
+        target = new IRGenenricTarget(new MitsubishiFEHeatpumpIR(), "mitsubishi_fe");
     } else if(strcasecmp(model, "mitsubishi_msy") == 0) {
-        target = new IRGenenricTarget(new MitsubishiMSYHeatpumpIR());
+        target = new IRGenenricTarget(new MitsubishiMSYHeatpumpIR(), "mitsubishi_msy");
     } else if(strcasecmp(model, "mitsubishi_fa") == 0) {
-        target = new IRGenenricTarget(new MitsubishiFAHeatpumpIR());
+        target = new IRGenenricTarget(new MitsubishiFAHeatpumpIR(), "mitsubishi_fa");
     } else if(strcasecmp(model, "mitsubishi_heavy_zj") == 0) {
-        target = new IRGenenricTarget(new MitsubishiHeavyZJHeatpumpIR());
+        target = new IRGenenricTarget(new MitsubishiHeavyZJHeatpumpIR(), "mitsubishi_heavy_zj");
     } else if(strcasecmp(model, "mitsubishi_heavy_zm") == 0) {
-        target = new IRGenenricTarget(new MitsubishiHeavyZMHeatpumpIR());
+        target = new IRGenenricTarget(new MitsubishiHeavyZMHeatpumpIR(), "mitsubishi_heavy_zm");
     } else if(strcasecmp(model, "mitsubishi_heavy_zmp") == 0) {
-        target = new IRGenenricTarget(new MitsubishiHeavyZMPHeatpumpIR());
+        target = new IRGenenricTarget(new MitsubishiHeavyZMPHeatpumpIR(), "mitsubishi_heavy_zmp");
     } else if(strcasecmp(model, "mitsubishi_sez") == 0) {
-        target = new IRGenenricTarget(new MitsubishiSEZKDXXHeatpumpIR());
+        target = new IRGenenricTarget(new MitsubishiSEZKDXXHeatpumpIR(), "mitsubishi_sez");
     } else if(strcasecmp(model, "panasonic_ckp") == 0) {
-        target = new IRGenenricTarget(new PanasonicCKPHeatpumpIR());
+        target = new IRGenenricTarget(new PanasonicCKPHeatpumpIR(), "panasonic_ckp");
     } else if(strcasecmp(model, "panasonic_dke") == 0) {
-        target = new IRGenenricTarget(new PanasonicDKEHeatpumpIR());
+        target = new IRGenenricTarget(new PanasonicDKEHeatpumpIR(), "panasonic_dke");
     } else if(strcasecmp(model, "panasonic_jke") == 0) {
-        target = new IRGenenricTarget(new PanasonicJKEHeatpumpIR());
+        target = new IRGenenricTarget(new PanasonicJKEHeatpumpIR(), "panasonic_jke");
     } else if(strcasecmp(model, "panasonic_nke") == 0) {
-        target = new IRGenenricTarget(new PanasonicNKEHeatpumpIR());
+        target = new IRGenenricTarget(new PanasonicNKEHeatpumpIR(), "panasonic_nke");
     } else if(strcasecmp(model, "panasonic_lke") == 0) {
-        target = new IRGenenricTarget(new PanasonicLKEHeatpumpIR());
+        target = new IRGenenricTarget(new PanasonicLKEHeatpumpIR(), "panasonic_lke");
     }
 
     return target;

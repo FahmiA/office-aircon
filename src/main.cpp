@@ -200,13 +200,14 @@ void takeTempReading() {
 
 IRSettingCfg* parseIRSettingModel(IRSettingCfg *settings, const char* value) {
     Serial.println("Parsing model");
+
     IRTarget *target = irParseModel(value);
     if (target == NULL) {
         Serial.println("\tMissing target");
         return NULL;
     }
 
-    if(strcmp(settings->model->getName(), target->getName())) {
+    if(strcmp(settings->model->getName(), target->getName()) == 0) {
         Serial.println("\tSame model");
         return NULL;
     }
