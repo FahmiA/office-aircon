@@ -20,14 +20,53 @@
 
 #define MITSUBISHI_CUSTOM_NAME "mitsubishi_custom"
 
-uint8_t irGetPowerCode(IRPower power) {
+void irPulse(uint8_t pin, long microsecs);
+
+IRCustomMitsubishiTarget* irGetCustomTarget(const char* model) {
+    IRCustomMitsubishiTarget* target = NULL;
+
+    if(strcasecmp(model, MITSUBISHI_CUSTOM_NAME) == 0) {
+        target = new IRCustomMitsubishiTarget();
+    }
+
+    return target;
+}
+
+const char* IRCustomMitsubishiTarget::getName() {
+    return MITSUBISHI_CUSTOM_NAME;
+}
+
+void IRCustomMitsubishiTarget::send(uint8_t pin, IRSettingCfg *settings) {
+    Serial.println("IRCustomMitsubishiTarget.send");
+
+    uint8_t *bytes = this->getSignalBytes(settings);
+    uint8_t *bits = this->getSignalBits(bytes);
+
+    // Initiate signal
+    irPulse(pin, HDR_MARK);
+    delayMicroseconds(HDR_SPACE);
+
+    // Body of signal
+    irPulse(pin, ZERO_SPACE);
+    for (uint8_t i = 0; i < (IR_NUM_BYTES * IR_SIZOF_BYTE); i++) {
+        if (bits[i]) {
+            delayMicroseconds(ONE_SPACE);
+        } else {
+            delayMicroseconds(ZERO_SPACE);
+        }
+        irPulse(pin, BIT_MARK);
+    }
+}
+
+
+uint8_t IRCustomMitsubishiTarget::getPowerCode(IRPower power) {
     switch(power) {
         case IRPower::On: return 0x24;
         default: return 0x20;
     }
 }
 
-uint8_t irGetModeCode(IRMode mode) {
+uint8_t IRCustomMitsubishiTarget::getModeCode(IRMode mode) {
     switch(mode) {
         case IRMode::Auto: return 0x8;
         case IRMode::Heat: return 0x1;
@@ -38,7 +77,7 @@ uint8_t irGetModeCode(IRMode mode) {
     }
 }
 
-uint8_t irGetFanSpeedCode(IRFanSpeed fanSpeed) {
+uint8_t IRCustomMitsubishiTarget::getFanSpeedCode(IRFanSpeed fanSpeed) {
     switch(fanSpeed) {
         case IRFanSpeed::Auto: return 0;
         case IRFanSpeed::Low: return 0x02;
@@ -48,7 +87,7 @@ uint8_t irGetFanSpeedCode(IRFanSpeed fanSpeed) {
     }
 }
 
-uint8_t irGetFanVertCode(IRFanVert fanVert) {
+uint8_t IRCustomMitsubishiTarget::getFanVertCode(IRFanVert fanVert) {
     switch(fanVert) {
         case IRFanVert::Auto: return 0;
         case IRFanVert::Up: return 0x08;
@@ -61,7 +100,7 @@ uint8_t irGetFanVertCode(IRFanVert fanVert) {
     }
 }
 
-uint8_t irGetFanHorzCode(IRFanHorz fanHorz) {
+uint8_t IRCustomMitsubishiTarget::getFanHorzCode(IRFanHorz fanHorz) {
     switch(fanHorz) {
         case IRFanHorz::Auto: return 0;
         case IRFanHorz::Left: return 0x04;
@@ -78,7 +117,7 @@ uint8_t irGetFanHorzCode(IRFanHorz fanHorz) {
 /*
  * Produce sequence checksum.
  */
-uint8_t irGetChecksum(uint8_t* bytes) {
+uint8_t IRCustomMitsubishiTarget::getChecksum(uint8_t* bytes) {
     int checksum = 0;
 
     for(int i = 0; i < IR_NUM_BYTES; i++) {
@@ -93,7 +132,7 @@ uint8_t irGetChecksum(uint8_t* bytes) {
  *
  * https://github.com/ToniA/Raw-IR-decoder-for-Arduino/blob/master/Fuego.cpp
  */
-uint8_t* irGetBytes(struct IRSettingCfg *settings) {
+uint8_t* IRCustomMitsubishiTarget::getSignalBytes(struct IRSettingCfg *settings) {
     uint8_t *bytes = (uint8_t*) calloc(IR_NUM_BYTES, sizeof(uint8_t));
 
     bytes[0] = HEADER_BYTE_1;
@@ -101,13 +140,13 @@ uint8_t* irGetBytes(struct IRSettingCfg *settings) {
     bytes[2] = HEADER_BYTE_3;
     bytes[3] = 0x1; // ?
 
-    bytes[5] = irGetPowerCode(settings->power);
-    bytes[6] = irGetModeCode(settings->mode);
+    bytes[5] = this->getPowerCode(settings->power);
+    bytes[6] = this->getModeCode(settings->mode);
     bytes[7] = 31 - settings->temp;
-    bytes[8] = irGetFanSpeedCode(settings->fanSpeed) | irGetFanVertCode(settings->fanDirVert);
+    bytes[8] = this->getFanSpeedCode(settings->fanSpeed) | this->getFanVertCode(settings->fanDirVert);
 
-    bytes[12] = irGetFanHorzCode(settings->fanDirHorz);
-    bytes[13] = irGetChecksum(bytes);
+    bytes[12] = this->getFanHorzCode(settings->fanDirHorz);
+    bytes[13] = this->getChecksum(bytes);
 
     return bytes;
 }
@@ -115,7 +154,7 @@ uint8_t* irGetBytes(struct IRSettingCfg *settings) {
 /*
  * Produce bit sequence from byte sequence.
  */
-uint8_t* irGetBits(uint8_t* bytes) {
+uint8_t* IRCustomMitsubishiTarget::getSignalBits(uint8_t* bytes) {
     uint8_t *bits = (uint8_t*) calloc(IR_NUM_BYTES * IR_SIZOF_BYTE, sizeof(uint8_t));
     // uint8_t mask = 0x80
     uint8_t mask = 0x01; // Flip for some reason
@@ -152,41 +191,5 @@ void irPulse(uint8_t pin, long microsecs) {
     }
 
     sei();  // this turns them back on
-}
-
-const char* IRCustomMitsubishiTarget::getName() {
-    return MITSUBISHI_CUSTOM_NAME;
-}
-
-void IRCustomMitsubishiTarget::send(uint8_t pin, IRSettingCfg *settings) {
-    Serial.println("IRCustomMitsubishiTarget.send");
-
-    uint8_t *bytes = irGetBytes(settings);
-    uint8_t *bits = irGetBits(bytes);
-
-    // Initiate signal
-    irPulse(pin, HDR_MARK);
-    delayMicroseconds(HDR_SPACE);
-
-    // Body of signal
-    irPulse(pin, ZERO_SPACE);
-    for (uint8_t i = 0; i < (IR_NUM_BYTES * IR_SIZOF_BYTE); i++) {
-        if (bits[i]) {
-            delayMicroseconds(ONE_SPACE);
-        } else {
-            delayMicroseconds(ZERO_SPACE);
-        }
-        irPulse(pin, BIT_MARK);
-    }
-}
-
-IRCustomMitsubishiTarget* irGetCustomTarget(const char* model) {
-    IRCustomMitsubishiTarget* target = NULL;
-
-    if(strcasecmp(model, MITSUBISHI_CUSTOM_NAME) == 0) {
-        target = new IRCustomMitsubishiTarget();
-    }
-
-    return target;
 }
 
