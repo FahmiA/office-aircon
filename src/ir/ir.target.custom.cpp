@@ -56,6 +56,9 @@ void IRCustomMitsubishiTarget::send(uint8_t pin, IRSettingCfg *settings) {
         }
         irPulse(pin, BIT_MARK);
     }
+
+    free(bytes);
+    free(bits);
 }
 
 
