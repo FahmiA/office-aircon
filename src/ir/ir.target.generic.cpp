@@ -50,11 +50,9 @@ IRGenenricTarget::IRGenenricTarget(HeatpumpIR *ir, const char *model) {
 
 IRGenenricTarget::~IRGenenricTarget() {
     delete this->ir;
-    delete this->model;
 }
 
 const char* IRGenenricTarget::getName() {
-    // TODO: Fetch this->ir->model() from PROGMEM
     return this->model;
 }
 

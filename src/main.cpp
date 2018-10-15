@@ -209,6 +209,7 @@ IRSettingCfg* parseIRSettingModel(IRSettingCfg *settings, const char* value) {
 
     if(strcmp(settings->model->getName(), target->getName()) == 0) {
         Serial.println("\tSame model");
+        delete target;
         return NULL;
     }
 
