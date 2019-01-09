@@ -27,7 +27,9 @@ Watch
 
 ## Settings
 
-Update `private.sh` with settings and set `FIRST_TIME_SETUP` to true.
+Update `data/homie/config.json` with settings and run:
+
+    platformio run --target uploadfs
 
 ## Circuit
 

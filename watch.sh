@@ -1,4 +1,4 @@
 #!/bin/bash
 
 platformio run --target clean
-find src -name '*.hpp' -o -name '*.cpp' | entr -rc platformio run
+find src -type f | entr -rc platformio run

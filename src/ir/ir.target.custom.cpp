@@ -22,10 +22,10 @@
 
 void irPulse(uint8_t pin, long microsecs);
 
-IRCustomMitsubishiTarget* irGetCustomTarget(const char* model) {
+IRCustomMitsubishiTarget* irGetCustomTarget(const String& model) {
     IRCustomMitsubishiTarget* target = NULL;
 
-    if(strcasecmp(model, MITSUBISHI_CUSTOM_NAME) == 0) {
+    if(model == MITSUBISHI_CUSTOM_NAME) {
         target = new IRCustomMitsubishiTarget();
     }
 

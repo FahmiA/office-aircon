@@ -24,6 +24,6 @@ class IRGenenricTarget : public IRTarget {
         uint8_t getFanHorzCode(IRFanHorz fanHorz);
 };
 
-IRGenenricTarget* irGetGenericTarget(const char*);
+IRGenenricTarget* irGetGenericTarget(const String&);
 
 #endif // IR_TARGET_GENERIC

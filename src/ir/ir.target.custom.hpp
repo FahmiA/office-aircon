@@ -18,6 +18,6 @@ class IRCustomMitsubishiTarget : public IRTarget {
         uint8_t* getSignalBits(uint8_t* bytes);
 };
 
-IRCustomMitsubishiTarget* irGetCustomTarget(const char*);
+IRCustomMitsubishiTarget* irGetCustomTarget(const String&);
 
 #endif // IR_TARGET_CUSTOM
