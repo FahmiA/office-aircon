@@ -32,7 +32,7 @@ IRCustomMitsubishiTarget* irGetCustomTarget(const String& model) {
     return target;
 }
 
-const char* IRCustomMitsubishiTarget::getName() {
+String IRCustomMitsubishiTarget::getName() {
     return MITSUBISHI_CUSTOM_NAME;
 }
 

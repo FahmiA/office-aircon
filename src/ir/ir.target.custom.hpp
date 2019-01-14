@@ -5,7 +5,7 @@
 
 class IRCustomMitsubishiTarget : public IRTarget {
     public:
-        const char* getName();
+        String getName();
         void send(uint8_t pin, IRSettingCfg *settings);
     private:
         uint8_t getPowerCode(IRPower power);

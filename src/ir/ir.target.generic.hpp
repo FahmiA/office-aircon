@@ -7,14 +7,14 @@
 
 class IRGenenricTarget : public IRTarget {
     public:
-        IRGenenricTarget(HeatpumpIR* ir, const char* model);
+        IRGenenricTarget(HeatpumpIR* ir, const String model);
         ~IRGenenricTarget();
 
-        const char* getName();
+        String getName();
         void send(uint8_t pin, IRSettingCfg *settings);
     private:
         HeatpumpIR *ir;
-        const char *model;
+        String model;
 
         uint8_t getPowerCode(IRPower power);
         uint8_t getChecksum(uint8_t* bytes);

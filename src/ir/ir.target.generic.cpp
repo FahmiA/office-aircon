@@ -43,7 +43,7 @@ IRGenenricTarget* irGetGenericTarget(const String& model) {
     return target;
 };
 
-IRGenenricTarget::IRGenenricTarget(HeatpumpIR *ir, const char *model) {
+IRGenenricTarget::IRGenenricTarget(HeatpumpIR *ir, const String model) {
     this->ir = ir;
     this->model = model;
 }
@@ -52,7 +52,7 @@ IRGenenricTarget::~IRGenenricTarget() {
     delete this->ir;
 }
 
-const char* IRGenenricTarget::getName() {
+String IRGenenricTarget::getName() {
     return this->model;
 }
 

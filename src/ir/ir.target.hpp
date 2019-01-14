@@ -24,7 +24,7 @@ struct IRSettingCfg {
 class IRTarget {
     public:
         virtual ~IRTarget();
-        virtual const char* getName() = 0;
+        virtual String getName() = 0;
         virtual void send(uint8_t pin, IRSettingCfg *settings) = 0;
 };
 
